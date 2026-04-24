@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-8^j_1s9mu-8x9um^xf7xd0#x0z)wm@@%v42no_6xjk-tqs_$%_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['magnetbackend.myimc.in', 'localhost', '127.0.0.1']
 
 
 # Application definition

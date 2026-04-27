@@ -15,13 +15,13 @@ def add_fee_paid(request):
             if not data:
                 return JsonResponse({'status': False, 'message': 'Empty data list'}, status=400)
 
-            client_ids = set(item.get('client_id') for item in data if item.get('client_id'))
-            if client_ids:
-                FeePaid.objects.filter(client_id__in=client_ids).delete()
+            institution_ids = set(item.get('institution_id') for item in data if item.get('institution_id'))
+            if institution_ids:
+                FeePaid.objects.filter(institution_id__in=institution_ids).delete()
 
             fees = [
                 FeePaid(
-                    client_id=item.get('client_id'),
+                    institution_id=item.get('institution_id'),
                     admno=item.get('admno'),
                     particulars=item.get('particulars'),
                     amount=item.get('amount'),
@@ -36,12 +36,12 @@ def add_fee_paid(request):
                 'message': f'{len(fees)} fee paid records updated successfully'
             })
         else:
-            client_id = data.get('client_id')
-            if client_id:
-                FeePaid.objects.filter(client_id=client_id).delete()
+            institution_id = data.get('institution_id')
+            if institution_id:
+                FeePaid.objects.filter(institution_id=institution_id).delete()
 
             fee = FeePaid.objects.create(
-                client_id=client_id,
+                institution_id=institution_id,
                 admno=data.get('admno'),
                 particulars=data.get('particulars'),
                 amount=data.get('amount'),

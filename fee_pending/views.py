@@ -15,13 +15,13 @@ def add_fee_pending(request):
             if not data:
                 return JsonResponse({'status': False, 'message': 'Empty data list'}, status=400)
 
-            client_ids = set(item.get('client_id') for item in data if item.get('client_id'))
-            if client_ids:
-                FeePending.objects.filter(client_id__in=client_ids).delete()
+            institution_ids = set(item.get('institution_id') for item in data if item.get('institution_id'))
+            if institution_ids:
+                FeePending.objects.filter(institution_id__in=institution_ids).delete()
 
             fees = [
                 FeePending(
-                    client_id=item.get('client_id'),
+                    institution_id=item.get('institution_id'),
                     admno=item.get('admno'),
                     month=item.get('month'),
                     particulars=item.get('particulars'),
@@ -38,12 +38,12 @@ def add_fee_pending(request):
                 'message': f'{len(fees)} fee pending records updated successfully'
             })
         else:
-            client_id = data.get('client_id')
-            if client_id:
-                FeePending.objects.filter(client_id=client_id).delete()
+            institution_id = data.get('institution_id')
+            if institution_id:
+                FeePending.objects.filter(institution_id=institution_id).delete()
 
             fee = FeePending.objects.create(
-                client_id=client_id,
+                institution_id=institution_id,
                 admno=data.get('admno'),
                 month=data.get('month'),
                 particulars=data.get('particulars'),

@@ -1,7 +1,7 @@
 from django.db import models
 
 class FeePaid(models.Model):
-    client_id = models.CharField(max_length=100)
+    institution_id = models.CharField(max_length=100)
     admno = models.CharField(max_length=100)
     particulars = models.TextField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)

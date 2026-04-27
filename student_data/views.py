@@ -17,13 +17,13 @@ def add_student(request):
                 return JsonResponse({'status': False, 'message': 'Empty data list'}, status=400)
             
             # Get unique client IDs from the list to delete existing records
-            client_ids = set(item.get('client_id') for item in data if item.get('client_id'))
-            if client_ids:
-                StudentData.objects.filter(client_id__in=client_ids).delete()
+            institution_ids = set(item.get('institution_id') for item in data if item.get('institution_id'))
+            if institution_ids:
+                StudentData.objects.filter(institution_id__in=institution_ids).delete()
 
             students = [
                 StudentData(
-                    client_id=item.get('client_id'),
+                    institution_id=item.get('institution_id'),
                     admno=item.get('admno'),
                     student_name=item.get('student_name'),
                     student_class=item.get('student_class'),
@@ -45,12 +45,12 @@ def add_student(request):
                 'message': f'{len(students)} students updated successfully'
             })
         else:
-            client_id = data.get('client_id')
-            if client_id:
-                StudentData.objects.filter(client_id=client_id).delete()
+            institution_id = data.get('institution_id')
+            if institution_id:
+                StudentData.objects.filter(institution_id=institution_id).delete()
 
             student = StudentData.objects.create(
-                client_id=client_id,
+                institution_id=institution_id,
                 admno=data.get('admno'),
                 student_name=data.get('student_name'),
                 student_class=data.get('student_class'),

@@ -22,4 +22,8 @@ urlpatterns = [
     path('student_data/', include('student_data.urls')),
     path('fee_pending/', include('fee_pending.urls')),
     path('feepaid/', include('feepaid.urls')),
+    path('api/', include('logins.urls')),
+    path('api/', include('add_administrators.urls')),
+    path('api/job-categories/', include('job_categories.urls')),
+    path('api/teachers/', include('teachers_manage.urls')),
 ]

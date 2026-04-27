@@ -1,7 +1,7 @@
 from django.db import models
 
 class StudentData(models.Model):
-    client_id = models.CharField(max_length=100)
+    institution_id = models.CharField(max_length=100)
     admno = models.CharField(max_length=100)
     student_name = models.CharField(max_length=200)
     student_class = models.CharField(max_length=100)

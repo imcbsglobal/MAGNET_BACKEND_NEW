@@ -1,7 +1,7 @@
 from django.db import models
 
 class FeePending(models.Model):
-    client_id = models.CharField(max_length=100)
+    institution_id = models.CharField(max_length=100)
     admno = models.CharField(max_length=100)
     month = models.CharField(max_length=100)
     particulars = models.TextField()

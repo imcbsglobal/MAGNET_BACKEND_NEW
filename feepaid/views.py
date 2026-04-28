@@ -5,6 +5,16 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import FeePaid
+import decimal
+
+class DecimalDateEncoder(json.JSONEncoder):
+    def default(self, obj):
+        import datetime
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        return super().default(obj)
 
 @csrf_exempt
 def add_fee_paid(request):
@@ -55,3 +65,43 @@ def add_fee_paid(request):
                 'message': 'Fee paid updated successfully',
                 'id': fee.id
             })
+
+    return JsonResponse({'status': False, 'message': 'Only POST method allowed'}, status=405)
+
+
+def get_fee_paid(request):
+    if request.method == 'GET':
+        institution_id = request.GET.get('institution_id')
+        admno = request.GET.get('admno')
+
+        if not institution_id or not admno:
+            return JsonResponse({'status': False, 'message': 'institution_id and admno are required'}, status=400)
+
+        fees = list(FeePaid.objects.filter(institution_id=institution_id, admno=admno).values(
+            'id', 'institution_id', 'admno', 'particulars', 'amount', 'date', 'refno', 'remark'
+        ).order_by('date'))
+
+        total_paid = sum([float(item['amount']) for item in fees])
+
+        return JsonResponse({
+            'status': True,
+            'fees': fees,
+            'total_paid': total_paid,
+        })
+
+    return JsonResponse({'status': False, 'message': 'Only GET method allowed'}, status=405)
+
+
+def get_all_paid_fees(request):
+    if request.method == 'GET':
+        institution_id = request.GET.get('institution_id')
+        if not institution_id:
+            return JsonResponse({'status': False, 'message': 'institution_id is required'}, status=400)
+
+        fees = list(FeePaid.objects.filter(institution_id=institution_id).values(
+            'id', 'institution_id', 'admno', 'particulars', 'amount', 'date', 'refno', 'remark'
+        ).order_by('admno', 'date'))
+
+        return JsonResponse({'status': True, 'fees': fees}, encoder=DecimalDateEncoder)
+
+    return JsonResponse({'status': False, 'message': 'Only GET method allowed'}, status=405)

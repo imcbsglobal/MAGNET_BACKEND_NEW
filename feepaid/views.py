@@ -108,9 +108,12 @@ def get_all_paid_fees(request):
             'id', 'institution_id', 'admno', 'particulars', 'amount', 'date', 'refno', 'remark'
         ).order_by('admno', 'date'))
 
-        students = {s['admno']: s['student_name'] for s in StudentData.objects.filter(institution_id=institution_id).values('admno', 'student_name')}
+        students = {s['admno']: s for s in StudentData.objects.filter(institution_id=institution_id).values('admno', 'student_name', 'student_class', 'div')}
         for fee in fees:
-            fee['student_name'] = students.get(fee['admno'], '')
+            s = students.get(fee['admno'], {})
+            fee['student_name'] = s.get('student_name', '')
+            fee['student_class'] = s.get('student_class', '')
+            fee['div'] = s.get('div', '')
 
         return JsonResponse({'status': True, 'fees': fees}, encoder=DecimalDateEncoder)
 

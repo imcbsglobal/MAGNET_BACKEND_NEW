@@ -5,6 +5,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import FeePaid
+from student_data.models import StudentData
 import decimal
 
 class DecimalDateEncoder(json.JSONEncoder):
@@ -81,13 +82,18 @@ def get_fee_paid(request):
             'id', 'institution_id', 'admno', 'particulars', 'amount', 'date', 'refno', 'remark'
         ).order_by('date'))
 
+        student = StudentData.objects.filter(institution_id=institution_id, admno=admno).values('student_name').first()
+        student_name = student['student_name'] if student else ''
+        for fee in fees:
+            fee['student_name'] = student_name
+
         total_paid = sum([float(item['amount']) for item in fees])
 
         return JsonResponse({
             'status': True,
             'fees': fees,
             'total_paid': total_paid,
-        })
+        }, encoder=DecimalDateEncoder)
 
     return JsonResponse({'status': False, 'message': 'Only GET method allowed'}, status=405)
 
@@ -101,6 +107,10 @@ def get_all_paid_fees(request):
         fees = list(FeePaid.objects.filter(institution_id=institution_id).values(
             'id', 'institution_id', 'admno', 'particulars', 'amount', 'date', 'refno', 'remark'
         ).order_by('admno', 'date'))
+
+        students = {s['admno']: s['student_name'] for s in StudentData.objects.filter(institution_id=institution_id).values('admno', 'student_name')}
+        for fee in fees:
+            fee['student_name'] = students.get(fee['admno'], '')
 
         return JsonResponse({'status': True, 'fees': fees}, encoder=DecimalDateEncoder)
 

@@ -5,6 +5,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import FeePending
+from student_data.models import StudentData
 import decimal
 
 class DecimalDateEncoder(json.JSONEncoder):
@@ -85,6 +86,11 @@ def get_fee_pending(request):
             'id', 'institution_id', 'admno', 'month', 'particulars', 'amount', 'date', 'fine', 'refno', 'remark'
         ).order_by('date'))
 
+        student = StudentData.objects.filter(institution_id=institution_id, admno=admno).values('student_name').first()
+        student_name = student['student_name'] if student else ''
+        for fee in fees:
+            fee['student_name'] = student_name
+
         total_due = sum([float(item['amount']) + float(item['fine']) for item in fees])
 
         return JsonResponse({
@@ -105,6 +111,10 @@ def get_all_pending_fees(request):
         fees = list(FeePending.objects.filter(institution_id=institution_id).values(
             'id', 'institution_id', 'admno', 'month', 'particulars', 'amount', 'date', 'fine', 'refno', 'remark'
         ).order_by('admno', 'date'))
+
+        students = {s['admno']: s['student_name'] for s in StudentData.objects.filter(institution_id=institution_id).values('admno', 'student_name')}
+        for fee in fees:
+            fee['student_name'] = students.get(fee['admno'], '')
 
         return JsonResponse({'status': True, 'fees': fees}, encoder=DecimalDateEncoder)
 

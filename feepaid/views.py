@@ -7,6 +7,18 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import FeePaid
 from student_data.models import StudentData
 import decimal
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
+
+def decode_token(request):
+    auth = request.headers.get('Authorization', '')
+    if auth.startswith('Bearer '):
+        try:
+            token = AccessToken(auth.split(' ')[1])
+            return token.payload.get('institution_id'), token.payload.get('admno')
+        except TokenError:
+            pass
+    return None, None
 
 class DecimalDateEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -72,8 +84,9 @@ def add_fee_paid(request):
 
 def get_fee_paid(request):
     if request.method == 'GET':
-        institution_id = request.GET.get('institution_id')
-        admno = request.GET.get('admno')
+        token_institution_id, token_admno = decode_token(request)
+        institution_id = token_institution_id or request.GET.get('institution_id')
+        admno = token_admno or request.GET.get('admno')
 
         if not institution_id or not admno:
             return JsonResponse({'status': False, 'message': 'institution_id and admno are required'}, status=400)

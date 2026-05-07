@@ -1,11 +1,9 @@
 from datetime import date
-
-from django.shortcuts import render
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import StudentData
-# Create your views here.
+
 
 @csrf_exempt
 def add_student(request):
@@ -15,8 +13,7 @@ def add_student(request):
         if isinstance(data, list):
             if not data:
                 return JsonResponse({'status': False, 'message': 'Empty data list'}, status=400)
-            
-            # Get unique client IDs from the list to delete existing records
+
             institution_ids = set(item.get('institution_id') for item in data if item.get('institution_id'))
             if institution_ids:
                 StudentData.objects.filter(institution_id__in=institution_ids).delete()
@@ -40,10 +37,7 @@ def add_student(request):
                 ) for item in data
             ]
             StudentData.objects.bulk_create(students)
-            return JsonResponse({
-                'status': True,
-                'message': f'{len(students)} students updated successfully'
-            })
+            return JsonResponse({'status': True, 'message': f'{len(students)} students updated successfully'})
         else:
             institution_id = data.get('institution_id')
             if institution_id:
@@ -65,11 +59,57 @@ def add_student(request):
                 remark=data.get('remark'),
                 refno=data.get('refno')
             )
-            return JsonResponse({
-                'status': True,
-                'message': 'Student updated successfully',
-                'id': student.id
-            })
+            return JsonResponse({'status': True, 'message': 'Student updated successfully', 'id': student.id})
 
 
-    #    hsjnsks
+@csrf_exempt
+def get_all_students(request):
+    institution_id = request.GET.get('institution_id')
+    if not institution_id:
+        return JsonResponse({'message': 'institution_id required'}, status=400)
+
+    students = list(
+        StudentData.objects.filter(institution_id=institution_id)
+        .values(
+            'institution_id', 'admno', 'student_name', 'student_class',
+            'div', 'password', 'mobile', 'fathername', 'mothername',
+            'imageurl', 'address', 'place', 'remark', 'refno'
+        ).order_by('student_class', 'div', 'student_name')
+    )
+    return JsonResponse(students, safe=False)
+
+
+@csrf_exempt
+def get_classes_divisions(request):
+    institution_id = request.GET.get('institution_id')
+    if not institution_id:
+        return JsonResponse({'message': 'institution_id required'}, status=400)
+
+    qs = StudentData.objects.filter(institution_id=institution_id)
+    classes = sorted(set(v for v in qs.values_list('student_class', flat=True) if v))
+    divisions = sorted(set(v for v in qs.values_list('div', flat=True) if v))
+
+    return JsonResponse({'classes': classes, 'divisions': divisions})
+
+
+@csrf_exempt
+def get_students_by_class_division(request):
+    institution_id = request.GET.get('institution_id')
+    student_class = request.GET.get('student_class')
+    div = request.GET.get('div')
+
+    if not institution_id or not student_class or not div:
+        return JsonResponse({'message': 'institution_id, student_class and div are required'}, status=400)
+
+    students = list(
+        StudentData.objects.filter(
+            institution_id=institution_id,
+            student_class=student_class,
+            div=div
+        ).values(
+            'institution_id', 'admno', 'student_name', 'student_class',
+            'div', 'password', 'mobile', 'fathername', 'mothername',
+            'imageurl', 'address', 'place', 'remark', 'refno'
+        ).order_by('student_name')
+    )
+    return JsonResponse(students, safe=False)

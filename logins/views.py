@@ -98,6 +98,8 @@ def teacher_login(request):
                     'role': 'teacher',
                     'username': teacher.username,
                     'institution_id': teacher.institution_id,
+                    'assigned_class': teacher.assigned_class or '',
+                    'assigned_division': teacher.assigned_division or '',
                     'access': str(refresh.access_token),
                     'refresh': str(refresh)
                 })

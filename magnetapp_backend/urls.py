@@ -28,4 +28,5 @@ urlpatterns = [
     path('api/', include('add_administrators.urls')),
     path('api/job-categories/', include('job_categories.urls')),
     path('api/teachers/', include('teachers_manage.urls')),
+    path('api/attendance/', include('attendance.urls')),
 ]

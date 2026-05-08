@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'fee_pending',
     'feepaid',
     'corsheaders',
+    'attendance',
 ]
 
 REST_FRAMEWORK = {

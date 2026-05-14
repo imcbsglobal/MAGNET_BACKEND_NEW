@@ -24,9 +24,10 @@ urlpatterns = [
     path('api/fee_pending/', include('fee_pending.urls')),
     path('feepaid/', include('feepaid.urls')),
     path('api/feepaid/', include('feepaid.urls')),
-    path('api/', include('logins.urls')),
-    path('api/', include('add_administrators.urls')),
     path('api/job-categories/', include('job_categories.urls')),
     path('api/teachers/', include('teachers_manage.urls')),
     path('api/attendance/', include('attendance.urls')),
+    path('api/calendar/', include('calendar_setup.urls')),
+    path('api/', include('add_administrators.urls')),
+    path('api/', include('logins.urls')),
 ]

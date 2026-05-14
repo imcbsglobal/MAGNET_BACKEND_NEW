@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'feepaid',
     'corsheaders',
     'attendance',
+    'calendar_setup',
 ]
 
 REST_FRAMEWORK = {

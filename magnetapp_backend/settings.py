@@ -171,4 +171,4 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://127.0.0.1:5173')

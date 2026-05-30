@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny
 
+from django.conf import settings
 from student_data.models import StudentData
 from .models import IDCardForm
 
@@ -63,7 +64,7 @@ def _send_whatsapp_message(recipient, message):
 
 
 def _build_parent_link(token):
-    frontend_host = os.environ.get('FRONTEND_URL', 'http://127.0.0.1:5173')
+    frontend_host = getattr(settings, 'FRONTEND_URL', 'http://127.0.0.1:5173')
     return f"{frontend_host.rstrip('/')}/id-card/form/{token}"
 
 
@@ -153,7 +154,12 @@ def send_id_card_link(request):
         form.save()
 
     link = _build_parent_link(form.token)
-    message = f"Please complete your child's ID Card details here:\n{link}\n\nAll fields are required."
+    message = (
+        f"Dear Parent,\n\n"
+        f"Please complete your child's ID Card details by clicking the link below:\n\n"
+        f"{link}\n\n"
+        f"All fields are required. The link is valid for one-time use only."
+    )
 
     try:
         _send_whatsapp_message(student.mobile, message)
@@ -199,7 +205,12 @@ def bulk_send_id_card_links(request):
         form.used_at = None
         form.save()
         link = _build_parent_link(form.token)
-        message = f"Please complete your child's ID Card details here:\n{link}\n\nAll fields are required."
+        message = (
+            f"Dear Parent,\n\n"
+            f"Please complete your child's ID Card details by clicking the link below:\n\n"
+            f"{link}\n\n"
+            f"All fields are required. The link is valid for one-time use only."
+        )
         try:
             _send_whatsapp_message(student.mobile, message)
             form.sent_at = now()

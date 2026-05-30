@@ -13,7 +13,6 @@ from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny
 
-from django.conf import settings
 from student_data.models import StudentData
 from .models import IDCardForm
 
@@ -64,8 +63,7 @@ def _send_whatsapp_message(recipient, message):
 
 
 def _build_parent_link(token):
-    frontend_host = getattr(settings, 'FRONTEND_URL', 'http://127.0.0.1:5173')
-    return f"{frontend_host.rstrip('/')}/id-card/form/{token}"
+    return f"https://magnetpro.in/id-card/form/{token}"
 
 
 def _serialize_id_card(student, form=None):

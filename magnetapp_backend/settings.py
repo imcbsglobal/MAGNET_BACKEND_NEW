@@ -176,9 +176,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://127.0.0.1:5173')
 
-# Cloudflare R2 Configuration
-CLOUDFLARE_R2_BUCKET = os.getenv('CLOUDFLARE_R2_BUCKET', 'magnetschoolbackend').strip("'\"")
-CLOUDFLARE_R2_BUCKET_ENDPOINT = os.getenv('CLOUDFLARE_R2_BUCKET_ENDPOINT', '').strip("'\"")
-CLOUDFLARE_R2_ACCESS_KEY = os.getenv('CLOUDFLARE_R2_ACCESS_KEY', '').strip("'\"")
-CLOUDFLARE_R2_SECRET_KEY = os.getenv('CLOUDFLARE_R2_SECRET_KEY', '').strip("'\"")
-CLOUDFLARE_R2_PUBLIC_URL = os.getenv('CLOUDFLARE_R2_PUBLIC_URL', '').strip("'\"")
+# Cloudflare R2 Configuration - Direct values
+CLOUDFLARE_R2_BUCKET = 'magnetschoolbackend'
+CLOUDFLARE_R2_BUCKET_ENDPOINT = 'https://5543538795e940846a189901d1be5a3b.r2.cloudflarestorage.com'
+CLOUDFLARE_R2_ACCESS_KEY = '426c641a3ebb4cf080535e8e5af4b161'
+CLOUDFLARE_R2_SECRET_KEY = '09a6866c56df5f3e1257577f6a732c3cf98599565672ab3829a74bae086c7706'
+CLOUDFLARE_R2_PUBLIC_URL = 'https://pub-ddcc52723c824b00a51eb0dd3d095c78.r2.dev'

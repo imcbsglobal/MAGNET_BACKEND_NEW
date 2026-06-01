@@ -7,6 +7,7 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny
@@ -19,31 +20,56 @@ from .models import IDCardForm
 
 # ── Cloudflare R2 helpers ─────────────────────────────────────────────────────
 def _get_r2_client():
-    return boto3.client(
-        's3',
-        endpoint_url=os.getenv('CLOUDFLARE_R2_BUCKET_ENDPOINT'),
-        aws_access_key_id=os.getenv('CLOUDFLARE_R2_ACCESS_KEY'),
-        aws_secret_access_key=os.getenv('CLOUDFLARE_R2_SECRET_KEY'),
-        config=Config(signature_version='s3v4'),
-        region_name='auto',
-    )
+    """Create and return Cloudflare R2 client with proper error handling."""
+    try:
+        # Get credentials from Django settings
+        endpoint_url = getattr(settings, 'CLOUDFLARE_R2_BUCKET_ENDPOINT', '')
+        access_key = getattr(settings, 'CLOUDFLARE_R2_ACCESS_KEY', '')
+        secret_key = getattr(settings, 'CLOUDFLARE_R2_SECRET_KEY', '')
+        
+        if not all([endpoint_url, access_key, secret_key]):
+            raise ValueError("Missing Cloudflare R2 credentials in settings")
+        
+        return boto3.client(
+            's3',
+            endpoint_url=endpoint_url,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            config=Config(signature_version='s3v4'),
+            region_name='auto',
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to create R2 client: {str(e)}")
 
-R2_BUCKET     = os.getenv('CLOUDFLARE_R2_BUCKET', 'magnetschoolbackend')
-R2_PUBLIC_URL = os.getenv('CLOUDFLARE_R2_PUBLIC_URL', '').rstrip('/')
+R2_BUCKET = getattr(settings, 'CLOUDFLARE_R2_BUCKET', 'magnetschoolbackend')
+R2_PUBLIC_URL = getattr(settings, 'CLOUDFLARE_R2_PUBLIC_URL', '').rstrip('/')
 
 
 def _upload_photo_to_r2(file_obj, institution_id, admno):
-    ext = os.path.splitext(file_obj.name)[1].lower() or '.jpg'
-    content_type_map = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-                        '.png': 'image/png', '.webp': 'image/webp'}
-    content_type = content_type_map.get(ext, 'image/jpeg')
-    object_key = f'id_card_photos/{institution_id}/{admno}{ext}'
-    client = _get_r2_client()
-    client.upload_fileobj(
-        file_obj, R2_BUCKET, object_key,
-        ExtraArgs={'ContentType': content_type, 'CacheControl': 'public, max-age=31536000'}
-    )
-    return f'{R2_PUBLIC_URL}/{object_key}', object_key
+    """Upload photo to Cloudflare R2 with enhanced error handling."""
+    try:
+        ext = os.path.splitext(file_obj.name)[1].lower() or '.jpg'
+        content_type_map = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+                            '.png': 'image/png', '.webp': 'image/webp'}
+        content_type = content_type_map.get(ext, 'image/jpeg')
+        object_key = f'id_card_photos/{institution_id}/{admno}{ext}'
+        
+        client = _get_r2_client()
+        
+        # Reset file pointer to beginning
+        file_obj.seek(0)
+        
+        client.upload_fileobj(
+            file_obj, R2_BUCKET, object_key,
+            ExtraArgs={'ContentType': content_type, 'CacheControl': 'public, max-age=31536000'}
+        )
+        
+        photo_url = f'{R2_PUBLIC_URL}/{object_key}'
+        
+        return photo_url, object_key
+        
+    except Exception as e:
+        raise ValueError(f"Upload failed: {str(e)}")
 
 
 def _delete_from_r2(key):
@@ -285,37 +311,43 @@ def submit_id_card_form_by_phone(request):
 @parser_classes([MultiPartParser, FormParser])
 def upload_student_photo(request):
     """Upload student photo to Cloudflare R2."""
-    institution_id = request.data.get('institution_id')
-    admno = request.data.get('admno')
-    photo = request.FILES.get('photo')
-
-    if not institution_id or not admno:
-        return JsonResponse({'message': 'institution_id and admno required'}, status=400)
-    if not photo:
-        return JsonResponse({'message': 'photo file required'}, status=400)
-    if not photo.content_type.startswith('image/'):
-        return JsonResponse({'message': 'Only image files are allowed'}, status=400)
-    if photo.size > 5 * 1024 * 1024:
-        return JsonResponse({'message': 'Photo must be under 5MB'}, status=400)
-
-    form, _ = IDCardForm.objects.get_or_create(
-        institution_id=institution_id,
-        admno=admno,
-        defaults={'token': IDCardForm.generate_token()}
-    )
-
-    # Delete old photo
-    if form.photo_key:
-        _delete_from_r2(form.photo_key)
-
     try:
-        url, key = _upload_photo_to_r2(photo, institution_id, admno)
-        form.photo_url = url
-        form.photo_key = key
-        form.save()
-        return JsonResponse({'status': True, 'photo_url': url})
+        institution_id = request.data.get('institution_id')
+        admno = request.data.get('admno')
+        photo = request.FILES.get('photo')
+
+        if not institution_id or not admno:
+            return JsonResponse({'message': 'institution_id and admno required'}, status=400)
+        if not photo:
+            return JsonResponse({'message': 'photo file required'}, status=400)
+        if not photo.content_type.startswith('image/'):
+            return JsonResponse({'message': 'Only image files are allowed'}, status=400)
+        if photo.size > 5 * 1024 * 1024:
+            return JsonResponse({'message': 'Photo must be under 5MB'}, status=400)
+
+        form, created = IDCardForm.objects.get_or_create(
+            institution_id=institution_id,
+            admno=admno,
+            defaults={'token': IDCardForm.generate_token()}
+        )
+
+        # Delete old photo
+        if form.photo_key:
+            _delete_from_r2(form.photo_key)
+
+        try:
+            url, key = _upload_photo_to_r2(photo, institution_id, admno)
+            form.photo_url = url
+            form.photo_key = key
+            form.save()
+            
+            return JsonResponse({'status': True, 'photo_url': url})
+            
+        except Exception as upload_error:
+            return JsonResponse({'message': str(upload_error)}, status=500)
+            
     except Exception as e:
-        return JsonResponse({'message': f'Upload failed: {str(e)}'}, status=500)
+        return JsonResponse({'message': f'Server error: {str(e)}'}, status=500)
 
 
 @api_view(['GET'])

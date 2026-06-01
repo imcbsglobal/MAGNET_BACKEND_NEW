@@ -31,6 +31,10 @@ class IDCardForm(models.Model):
     mother_name = models.CharField(max_length=200, blank=True)
     dob = models.DateField(null=True, blank=True)
 
+    # Student photo stored on Cloudflare R2
+    photo_url = models.URLField(max_length=500, blank=True, null=True)
+    photo_key = models.CharField(max_length=255, blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

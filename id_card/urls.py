@@ -3,10 +3,12 @@ from . import views
 
 urlpatterns = [
     path('students/', views.id_card_student_list, name='id_card_student_list'),
-    path('send-link/', views.send_id_card_link, name='send_id_card_link'),
-    path('bulk-send/', views.bulk_send_id_card_links, name='bulk_send_id_card_links'),
     path('parent-link/', views.parent_link_info, name='parent_link_info'),
+    path('lookup-by-phone/', views.lookup_by_phone, name='lookup_by_phone'),
     path('submit/', views.submit_id_card_form, name='submit_id_card_form'),
+    path('submit-by-phone/', views.submit_id_card_form_by_phone, name='submit_id_card_form_by_phone'),
+    path('upload-photo/', views.upload_student_photo, name='upload_student_photo'),
+    path('school-info/', views.id_card_school_info, name='id_card_school_info'),
     path('submission/', views.id_card_submission_detail, name='id_card_submission_detail'),
     path('submission/<int:pk>/', views.update_id_card_submission, name='update_id_card_submission'),
 ]

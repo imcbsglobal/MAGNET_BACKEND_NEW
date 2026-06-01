@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID Card</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @page {
+            size: A4;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: #e5e7eb;
+            padding: 32px;
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            width: fit-content;
+        }
+        
+        .card-container {
+            display: flex;
+            gap: 24px;
+            background: #e5e7eb;
+            padding: 32px;
+        }
+        
+        .card {
+            width: 320px;
+            min-height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            background: #ffffff;
+            position: relative;
+            page-break-inside: avoid;
+        }
+        
+        /* ── FRONT CARD ────────────────────────────────────── */
+        .card-front {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-front .header {
+            background: #ffffff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            min-height: 80px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .header-logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .header-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #f0f0f0;
+        }
+        
+        .header-logo-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: #d0d0d0;
+        }
+        
+        .school-name-text {
+            font-size: 14px;
+            font-weight: 800;
+            color: #1f2937;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            max-width: 140px;
+        }
+        
+        .header-place {
+            background: #3b4d7a;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 80px;
+            white-space: nowrap;
+        }
+        
+        .card-front .photo-section {
+            position: relative;
+            height: 240px;
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #3b4d7a 100%);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .photo-blob {
+            position: absolute;
+            top: -40px;
+            left: -40px;
+            width: 280px;
+            height: 280px;
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #3b4d7a 100%);
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            transform: rotate(-15deg);
+            opacity: 0.6;
+        }
+        
+        .photo-circle {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            background: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .photo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            background: #e0e0e0;
+        }
+        
+        .card-front .student-info {
+            padding: 20px;
+            text-align: center;
+            background: #ffffff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .student-name {
+            font-size: 20px;
+            font-weight: 900;
+            color: #1f2937;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .student-class {
+            font-size: 18px;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 16px;
+        }
+        
+        .info-field {
+            display: flex;
+            align-items: flex-start;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+        
+        .info-label {
+            color: #374151;
+            font-weight: 700;
+            min-width: 70px;
+        }
+        
+        .info-sep {
+            color: #6b7280;
+            margin: 0 8px;
+        }
+        
+        .info-value {
+            color: #1f2937;
+            font-weight: 600;
+            flex: 1;
+            word-wrap: break-word;
+            max-width: 180px;
+        }
+        
+        .info-value.address {
+            line-height: 1.4;
+        }
+        
+        /* ── BACK CARD ────────────────────────────────────── */
+        .card-back {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+        }
+        
+        .card-back .header-design {
+            position: relative;
+            height: 120px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .triangle-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-right: 160px solid transparent;
+            border-top: 120px solid #7c3aed;
+        }
+        
+        .triangle-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-left: 320px solid transparent;
+            border-top: 80px solid #3b4d7a;
+        }
+        
+        .logo-pill {
+            display: flex;
+            justify-content: center;
+            margin: -40px 0 24px 0;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .logo-pill-content {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 12px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+        
+        .logo-pill-img {
+            height: 36px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+        
+        .logo-pill-placeholder {
+            height: 36px;
+            width: 100px;
+            background: #d0d0d0;
+            border-radius: 4px;
+        }
+        
+        .card-back .rules-section {
+            padding: 0 24px 16px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        
+        .rule-bullet {
+            color: #7c3aed;
+            font-weight: bold;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .card-back .footer {
+            padding: 16px 24px;
+            margin-top: auto;
+            border-top: 1px solid rgba(107,114,128,0.2);
+        }
+        
+        .footer-school-name {
+            font-size: 16px;
+            font-weight: 900;
+            color: #1f2937;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .footer-school-address {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #4b5563;
+        }
+        
+        .contact-emoji {
+            flex-shrink: 0;
+        }
+        
+        .contact-icon-place {
+            color: #ef4444;
+        }
+        
+        .contact-icon-phone {
+            color: #ef4444;
+        }
+        
+        .contact-icon-email {
+            color: #d1d5db;
+        }
+    </style>
+</head>
+<body>
+<div class="card-container">
+    <!-- ════════════════════ FRONT CARD ════════════════════ -->
+    <div class="card card-front">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-logo-section">
+                {% if school_logo %}
+                    <img src="{{ school_logo }}" class="header-logo" alt="logo">
+                {% else %}
+                    <div class="header-logo-placeholder"></div>
+                {% endif %}
+                <div class="school-name-text">{{ school_name }}</div>
+            </div>
+            <div class="header-place">{{ school_place }}</div>
+        </div>
+        
+        <!-- PHOTO SECTION -->
+        <div class="photo-section">
+            <div class="photo-blob"></div>
+            <div class="photo-circle">
+                {% if student_photo %}
+                    <img src="{{ student_photo }}" class="photo-image" alt="student-photo">
+                {% else %}
+                    <div class="photo-placeholder"></div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- STUDENT INFO -->
+        <div class="student-info">
+            <div class="student-name">{{ student_name }}</div>
+            <div class="student-class">{{ student_class }}{{ div }}</div>
+            
+            <div class="info-field">
+                <span class="info-label">Ad No</span>
+                <span class="info-sep">:</span>
+                <span class="info-value">{{ admno }}</span>
+            </div>
+            
+            <div class="info-field">
+                <span class="info-label">Phone</span>
+                <span class="info-sep">:</span>
+                <span class="info-value">{{ mobile }}</span>
+            </div>
+            
+            <div class="info-field">
+                <span class="info-label">Address</span>
+                <span class="info-sep">:</span>
+                <span class="info-value address">{{ full_address }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ════════════════════ BACK CARD ════════════════════ -->
+    <div class="card card-back">
+        <!-- HEADER DESIGN -->
+        <div class="header-design">
+            <div class="triangle-left"></div>
+            <div class="triangle-right"></div>
+        </div>
+        
+        <!-- LOGO PILL -->
+        <div class="logo-pill">
+            <div class="logo-pill-content">
+                {% if school_logo %}
+                    <img src="{{ school_logo }}" class="logo-pill-img" alt="logo">
+                {% else %}
+                    <div class="logo-pill-placeholder"></div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- RULES SECTION -->
+        <div class="rules-section">
+            <div class="rule-item">
+                <span class="rule-bullet">•</span>
+                <span>This card is issued for the academic year 2025-26</span>
+            </div>
+            <div class="rule-item">
+                <span class="rule-bullet">•</span>
+                <span>This card is non-transferable.</span>
+            </div>
+            <div class="rule-item">
+                <span class="rule-bullet">•</span>
+                <span>Always carry your card during school hours.</span>
+            </div>
+            <div class="rule-item">
+                <span class="rule-bullet">•</span>
+                <span>In case of loss, inform issuing authority.</span>
+            </div>
+            <div class="rule-item">
+                <span class="rule-bullet">•</span>
+                <span>If found, please post it to given address</span>
+            </div>
+        </div>
+        
+        <!-- FOOTER -->
+        <div class="footer">
+            <div class="footer-school-name">{{ school_name }}</div>
+            <div class="footer-school-address">{{ school_address }}</div>
+            <div class="footer-contact">
+                <div class="contact-item">
+                    <span class="contact-emoji contact-icon-place">📍</span>
+                    <span>{{ school_place }}</span>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-emoji contact-icon-phone">📞</span>
+                    <span>{{ school_phone }}</span>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-emoji contact-icon-email">✉️</span>
+                    <span>{{ school_email }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

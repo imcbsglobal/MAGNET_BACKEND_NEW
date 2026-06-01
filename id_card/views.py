@@ -2,16 +2,20 @@ import json
 import os
 import re
 import boto3
+import io
+import requests
 from botocore.config import Config
 from datetime import datetime
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.template.loader import render_to_string
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
+from xhtml2pdf import pisa
 
 from student_data.models import StudentData
 from add_administrators.models import SchoolInfo
@@ -435,3 +439,179 @@ def update_id_card_submission(request, pk):
 
     form.save()
     return JsonResponse({'status': True, 'message': 'Submission updated successfully'})
+
+
+# ── PDF GENERATION ENDPOINT (Backend using WeasyPrint) ────────────────────────
+
+def _fetch_image_as_base64(image_url):
+    """
+    Fetch image from URL (including Cloudflare R2) and convert to base64.
+    This solves CORS issues by downloading on the server side.
+    """
+    if not image_url:
+        return None
+    
+    try:
+        response = requests.get(image_url, timeout=10)
+        if response.status_code == 200:
+            import base64
+            b64 = base64.b64encode(response.content).decode('utf-8')
+            content_type = response.headers.get('content-type', 'image/jpeg')
+            return f"data:{content_type};base64,{b64}"
+        else:
+            print(f"Failed to fetch image: {image_url} (status {response.status_code})")
+            return None
+    except Exception as e:
+        print(f"Error fetching image {image_url}: {str(e)}")
+        return None
+
+
+@api_view(['POST'])
+def generate_id_card_pdf(request):
+    """Generate ID card PDF using xhtml2pdf on the server."""
+    try:
+        data = request.data
+        student = data.get('student', {})
+        school = data.get('school', {})
+        details = data.get('details', {})
+        
+        # Fetch and convert images to base64
+        student_photo_b64 = _fetch_image_as_base64(student.get('photo_url'))
+        school_logo_b64 = _fetch_image_as_base64(school.get('logo_url'))
+        
+        # Build address
+        full_address = ', '.join(filter(None, [
+            details.get('place'),
+            details.get('district'),
+            details.get('city'),
+            details.get('state'),
+            details.get('pin'),
+        ]))
+        
+        # Prepare context
+        context = {
+            'student_name': (student.get('student_name') or '').upper(),
+            'student_class': student.get('student_class', ''),
+            'div': student.get('div', ''),
+            'admno': student.get('admno', ''),
+            'mobile': student.get('mobile', ''),
+            'school_name': school.get('school_name', ''),
+            'school_address': school.get('address', ''),
+            'school_place': school.get('place', ''),
+            'school_phone': school.get('phone', ''),
+            'school_email': school.get('email', ''),
+            'full_address': full_address or 'Address not provided',
+            'student_photo': student_photo_b64,
+            'school_logo': school_logo_b64,
+        }
+        
+        # Render HTML template
+        html_content = render_to_string('id_card_template.html', context)
+        
+        # Generate PDF with xhtml2pdf
+        pdf_file = io.BytesIO()
+        pisa_status = pisa.CreatePDF(html_content, dest=pdf_file)
+        
+        if pisa_status.err:
+            raise Exception(f'xhtml2pdf error: {pisa_status.err}')
+        
+        pdf_file.seek(0)
+        
+        # Return PDF as file download
+        response = FileResponse(pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="ID_Card_{student.get("admno", "student")}.pdf"'
+        
+        return response
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'status': False, 'message': f'PDF generation failed: {str(e)}'}, status=500)
+
+
+@api_view(['POST'])
+def generate_bulk_id_card_pdf(request):
+    """
+    Generate PDF for multiple students.
+    
+    Request body:
+    {
+        "institution_id": "inst_123",
+        "students": [
+            { "student": {...}, "details": {...} },
+            { "student": {...}, "details": {...} }
+        ],
+        "school": {...}
+    }
+    """
+    try:
+        data = request.data
+        institution_id = data.get('institution_id')
+        students_data = data.get('students', [])
+        school = data.get('school', {})
+        
+        if not students_data:
+            return JsonResponse({'message': 'No students provided'}, status=400)
+        
+        # Fetch school logo once
+        school_logo_b64 = _fetch_image_as_base64(school.get('logo_url'))
+        
+        # Generate HTML for all students
+        all_html = '<html><head><style>page { page-break-after: always; }</style></head><body>'
+        
+        for idx, student_info in enumerate(students_data):
+            student = student_info.get('student', {})
+            details = student_info.get('details', {})
+            
+            # Fetch student photo
+            student_photo_b64 = _fetch_image_as_base64(student.get('photo_url'))
+            
+            # Build address
+            full_address = ', '.join(filter(None, [
+                details.get('place'),
+                details.get('district'),
+                details.get('city'),
+                details.get('state'),
+                details.get('pin'),
+            ]))
+            
+            context = {
+                'student_name': (student.get('student_name') or '').upper(),
+                'student_class': student.get('student_class', ''),
+                'div': student.get('div', ''),
+                'admno': student.get('admno', ''),
+                'mobile': student.get('mobile', ''),
+                'school_name': school.get('school_name', ''),
+                'school_address': school.get('address', ''),
+                'school_place': school.get('place', ''),
+                'school_phone': school.get('phone', ''),
+                'school_email': school.get('email', ''),
+                'full_address': full_address or 'Address not provided',
+                'student_photo': student_photo_b64,
+                'school_logo': school_logo_b64,
+            }
+            
+            # Render individual card
+            card_html = render_to_string('id_card_template.html', context)
+            all_html += f'<div style="page-break-after: always;">{card_html}</div>'
+        
+        all_html += '</body></html>'
+        
+        # Generate bulk PDF with xhtml2pdf
+        pdf_file = io.BytesIO()
+        pisa_status = pisa.CreatePDF(all_html, dest=pdf_file)
+        
+        if pisa_status.err:
+            raise Exception(f'xhtml2pdf error: {pisa_status.err}')
+        
+        pdf_file.seek(0)
+        
+        response = FileResponse(pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="ID_Cards_Bulk.pdf"'
+        
+        return response
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'status': False, 'message': f'Bulk PDF generation failed: {str(e)}'}, status=500)

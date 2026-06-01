@@ -11,4 +11,7 @@ urlpatterns = [
     path('school-info/', views.id_card_school_info, name='id_card_school_info'),
     path('submission/', views.id_card_submission_detail, name='id_card_submission_detail'),
     path('submission/<int:pk>/', views.update_id_card_submission, name='update_id_card_submission'),
+    # PDF generation endpoints
+    path('generate-pdf/', views.generate_id_card_pdf, name='generate_id_card_pdf'),
+    path('generate-bulk-pdf/', views.generate_bulk_id_card_pdf, name='generate_bulk_id_card_pdf'),
 ]

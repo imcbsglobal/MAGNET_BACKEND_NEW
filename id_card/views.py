@@ -685,9 +685,34 @@ def generate_bulk_id_card_pdf(request):
 
         # Build one combined HTML document — one page per student card pair
         pages_html = []
+        css_content = ""
+        
         for student_info in students_data:
             student = student_info.get('student', {})
+            
+            # Robustness: Fetch latest details from database for each student
+            current_inst_id = student.get('institution_id') or institution_id
+            current_admno = student.get('admno')
+            
             details = student_info.get('details', {})
+            if current_inst_id and current_admno:
+                try:
+                    form = IDCardForm.objects.get(institution_id=current_inst_id, admno=current_admno)
+                    details = {
+                        'student_name': form.student_name,
+                        'place': form.place,
+                        'district': form.district,
+                        'city': form.city,
+                        'state': form.state,
+                        'pin': form.pin,
+                        'phone': form.phone,
+                        'email': form.email,
+                        'father_name': form.father_name,
+                        'mother_name': form.mother_name,
+                        'dob': form.dob.isoformat() if form.dob else '',
+                    }
+                except IDCardForm.DoesNotExist:
+                    pass
 
             # Fetch student photo
             student_photo_b64 = _fetch_image_as_base64(student.get('photo_url'))
@@ -718,17 +743,25 @@ def generate_bulk_id_card_pdf(request):
                 'academic_year': '2025-26',
             }
 
-            # Render individual card and extract body content
+            # Render individual card
             card_html = render_to_string('id_card_template.html', context)
+            
+            # Extract CSS from the first card if not already done
+            if not css_content:
+                style_match = _re.search(r'<style[^>]*>(.*?)</style>', card_html, _re.DOTALL)
+                if style_match:
+                    css_content = style_match.group(1)
+
+            # Extract body content
             body_match = _re.search(r'<body[^>]*>(.*?)</body>', card_html, _re.DOTALL)
             body_content = body_match.group(1) if body_match else card_html
             pages_html.append(body_content)
 
-        # Wrap all pages with page-break between them
+        # Wrap all pages with page-break between them and include the CSS
         all_html = (
             '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            f'<style>{css_content}</style>'
             '<style>'
-            '@page { size: 116mm 92mm; margin: 0; }'
             '.page-wrap { page-break-after: always; }'
             '.page-wrap:last-child { page-break-after: avoid; }'
             '</style></head><body>'

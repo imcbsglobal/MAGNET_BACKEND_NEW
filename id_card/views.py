@@ -15,7 +15,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
-from xhtml2pdf import pisa
+from weasyprint import HTML as WeasyHTML
 
 from student_data.models import StudentData
 from add_administrators.models import SchoolInfo
@@ -501,13 +501,13 @@ def _fetch_image_as_base64(image_url):
     """
     if not image_url:
         return None
-    
+
     try:
+        import base64
         response = requests.get(image_url, timeout=10)
         if response.status_code == 200:
-            import base64
             b64 = base64.b64encode(response.content).decode('utf-8')
-            content_type = response.headers.get('content-type', 'image/jpeg')
+            content_type = response.headers.get('content-type', 'image/jpeg').split(';')[0]
             return f"data:{content_type};base64,{b64}"
         else:
             print(f"Failed to fetch image: {image_url} (status {response.status_code})")
@@ -519,17 +519,17 @@ def _fetch_image_as_base64(image_url):
 
 @api_view(['POST'])
 def generate_id_card_pdf(request):
-    """Generate ID card PDF using xhtml2pdf on the server."""
+    """Generate ID card PDF using WeasyPrint on the server."""
     try:
         data = request.data
         student = data.get('student', {})
         school = data.get('school', {})
         details = data.get('details', {})
-        
+
         # Fetch and convert images to base64
         student_photo_b64 = _fetch_image_as_base64(student.get('photo_url'))
         school_logo_b64 = _fetch_image_as_base64(school.get('logo_url'))
-        
+
         # Build address
         full_address = ', '.join(filter(None, [
             details.get('place'),
@@ -538,7 +538,7 @@ def generate_id_card_pdf(request):
             details.get('state'),
             details.get('pin'),
         ]))
-        
+
         # Prepare context
         context = {
             'student_name': (student.get('student_name') or '').upper(),
@@ -554,26 +554,22 @@ def generate_id_card_pdf(request):
             'full_address': full_address or 'Address not provided',
             'student_photo': student_photo_b64,
             'school_logo': school_logo_b64,
+            'academic_year': '2025-26',
         }
-        
+
         # Render HTML template
         html_content = render_to_string('id_card_template.html', context)
-        
-        # Generate PDF with xhtml2pdf
-        pdf_file = io.BytesIO()
-        pisa_status = pisa.CreatePDF(html_content, dest=pdf_file)
-        
-        if pisa_status.err:
-            raise Exception(f'xhtml2pdf error: {pisa_status.err}')
-        
-        pdf_file.seek(0)
-        
+
+        # Generate PDF with WeasyPrint (supports flexbox, border-radius, gradients)
+        pdf_bytes = WeasyHTML(string=html_content, base_url=None).write_pdf()
+        pdf_file = io.BytesIO(pdf_bytes)
+
         # Return PDF as file download
         response = FileResponse(pdf_file, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="ID_Card_{student.get("admno", "student")}.pdf"'
-        
+
         return response
-        
+
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -652,27 +648,27 @@ def generate_bulk_id_card_pdf(request):
     }
     """
     try:
+        import re as _re
         data = request.data
         institution_id = data.get('institution_id')
         students_data = data.get('students', [])
         school = data.get('school', {})
-        
+
         if not students_data:
             return JsonResponse({'message': 'No students provided'}, status=400)
-        
+
         # Fetch school logo once
         school_logo_b64 = _fetch_image_as_base64(school.get('logo_url'))
-        
-        # Generate HTML for all students
-        all_html = '<html><head><style>page { page-break-after: always; }</style></head><body>'
-        
-        for idx, student_info in enumerate(students_data):
+
+        # Build one combined HTML document — one page per student card pair
+        pages_html = []
+        for student_info in students_data:
             student = student_info.get('student', {})
             details = student_info.get('details', {})
-            
+
             # Fetch student photo
             student_photo_b64 = _fetch_image_as_base64(student.get('photo_url'))
-            
+
             # Build address
             full_address = ', '.join(filter(None, [
                 details.get('place'),
@@ -681,7 +677,7 @@ def generate_bulk_id_card_pdf(request):
                 details.get('state'),
                 details.get('pin'),
             ]))
-            
+
             context = {
                 'student_name': (student.get('student_name') or '').upper(),
                 'student_class': student.get('student_class', ''),
@@ -696,28 +692,37 @@ def generate_bulk_id_card_pdf(request):
                 'full_address': full_address or 'Address not provided',
                 'student_photo': student_photo_b64,
                 'school_logo': school_logo_b64,
+                'academic_year': '2025-26',
             }
-            
-            # Render individual card
+
+            # Render individual card and extract body content
             card_html = render_to_string('id_card_template.html', context)
-            all_html += f'<div style="page-break-after: always;">{card_html}</div>'
-        
+            body_match = _re.search(r'<body[^>]*>(.*?)</body>', card_html, _re.DOTALL)
+            body_content = body_match.group(1) if body_match else card_html
+            pages_html.append(body_content)
+
+        # Wrap all pages with page-break between them
+        all_html = (
+            '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            '<style>'
+            '@page { size: 720px 540px; margin: 0; }'
+            '.page-wrap { page-break-after: always; }'
+            '.page-wrap:last-child { page-break-after: avoid; }'
+            '</style></head><body>'
+        )
+        for body_content in pages_html:
+            all_html += f'<div class="page-wrap">{body_content}</div>'
         all_html += '</body></html>'
-        
-        # Generate bulk PDF with xhtml2pdf
-        pdf_file = io.BytesIO()
-        pisa_status = pisa.CreatePDF(all_html, dest=pdf_file)
-        
-        if pisa_status.err:
-            raise Exception(f'xhtml2pdf error: {pisa_status.err}')
-        
-        pdf_file.seek(0)
-        
+
+        # Generate bulk PDF with WeasyPrint
+        pdf_bytes = WeasyHTML(string=all_html, base_url=None).write_pdf()
+        pdf_file = io.BytesIO(pdf_bytes)
+
         response = FileResponse(pdf_file, content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="ID_Cards_Bulk.pdf"'
-        
+
         return response
-        
+
     except Exception as e:
         import traceback
         traceback.print_exc()

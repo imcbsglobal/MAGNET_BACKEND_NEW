@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ID Card</title>
     <style>
         * {
@@ -10,464 +9,520 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         @page {
-            size: A4;
+            size: 720px 540px;
             margin: 0;
-            padding: 0;
         }
-        
+
         body {
-            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
             background: #e5e7eb;
-            padding: 32px;
-            display: flex;
-            gap: 24px;
-            align-items: flex-start;
-            width: fit-content;
+            width: 720px;
+            height: 540px;
         }
-        
+
+        /* ─── CARD WRAPPER ──────────────────────────────── */
         .card-container {
-            display: flex;
-            gap: 24px;
+            display: table;
+            width: 720px;
+            height: 540px;
             background: #e5e7eb;
-            padding: 32px;
+            padding: 20px 24px;
         }
-        
+
+        .card-row {
+            display: table-row;
+        }
+
+        .card-cell {
+            display: table-cell;
+            vertical-align: top;
+            padding: 0 8px;
+        }
+
+        /* ─── BOTH CARDS ────────────────────────────────── */
         .card {
-            width: 320px;
-            min-height: 500px;
-            border-radius: 20px;
+            width: 310px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             background: #ffffff;
-            position: relative;
-            page-break-inside: avoid;
+            border: 1px solid #e0e0e0;
+            /* WeasyPrint box-shadow workaround */
+            -weasy-border-radius: 16px;
         }
-        
-        /* ── FRONT CARD ────────────────────────────────────── */
-        .card-front {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .card-front .header {
+
+        /* ════════════════ FRONT CARD ═══════════════════ */
+
+        /* Header row */
+        .front-header {
             background: #ffffff;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            min-height: 80px;
             border-bottom: 1px solid #e5e7eb;
+            padding: 12px 14px;
+            height: 68px;
         }
-        
-        .header-logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
+
+        .front-header-table {
+            display: table;
+            width: 100%;
         }
-        
+
+        .front-header-left {
+            display: table-cell;
+            vertical-align: middle;
+            width: 70%;
+        }
+
+        .front-header-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+        }
+
+        .header-logo-wrap {
+            display: table;
+        }
+
+        .header-logo-img-cell {
+            display: table-cell;
+            vertical-align: middle;
+            padding-right: 8px;
+        }
+
         .header-logo {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            border-radius: 8px;
-            background: #f0f0f0;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
         }
-        
+
         .header-logo-placeholder {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
+            width: 40px;
+            height: 40px;
             background: #d0d0d0;
+            border-radius: 6px;
+            display: table-cell;
         }
-        
+
+        .school-name-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
         .school-name-text {
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 11px;
+            font-weight: bold;
             color: #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             line-height: 1.2;
-            max-width: 140px;
         }
-        
-        .header-place {
+
+        .header-place-badge {
             background: #3b4d7a;
             color: #ffffff;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 8px 12px;
-            border-radius: 8px;
-            text-align: center;
-            min-width: 80px;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 5px 8px;
+            border-radius: 6px;
             white-space: nowrap;
+            display: inline-block;
         }
-        
-        .card-front .photo-section {
+
+        /* Photo section */
+        .photo-section {
+            height: 200px;
+            background: #5b21b6;
             position: relative;
-            height: 240px;
-            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #3b4d7a 100%);
+            text-align: center;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        
-        .photo-blob {
+
+        /* Purple gradient bg using a table fill */
+        .photo-section-inner {
             position: absolute;
-            top: -40px;
-            left: -40px;
-            width: 280px;
-            height: 280px;
-            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #3b4d7a 100%);
-            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-            transform: rotate(-15deg);
-            opacity: 0.6;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #6d28d9;
         }
-        
-        .photo-circle {
-            position: relative;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
+
+        .photo-circle-wrap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -58px;
+            margin-left: -58px;
+            width: 116px;
+            height: 116px;
+            border-radius: 58px;
             border: 4px solid #ffffff;
             background: #ffffff;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        
+
         .photo-image {
-            width: 100%;
-            height: 100%;
+            width: 108px;
+            height: 108px;
+            border-radius: 54px;
             object-fit: cover;
+            display: block;
         }
-        
+
         .photo-placeholder {
-            width: 100%;
-            height: 100%;
-            background: #e0e0e0;
+            width: 108px;
+            height: 108px;
+            background: #d0d0d0;
+            border-radius: 54px;
+            display: block;
         }
-        
-        .card-front .student-info {
-            padding: 20px;
-            text-align: center;
+
+        /* Student info */
+        .student-info {
+            padding: 14px 16px 12px 16px;
             background: #ffffff;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+            text-align: center;
         }
-        
+
         .student-name {
-            font-size: 20px;
-            font-weight: 900;
+            font-size: 16px;
+            font-weight: bold;
             color: #1f2937;
-            margin-bottom: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            margin-bottom: 2px;
         }
-        
+
         .student-class {
-            font-size: 18px;
-            font-weight: 700;
-            color: #7c3aed;
-            margin-bottom: 16px;
-        }
-        
-        .info-field {
-            display: flex;
-            align-items: flex-start;
             font-size: 14px;
-            margin-bottom: 8px;
+            font-weight: bold;
+            color: #7c3aed;
+            margin-bottom: 10px;
+        }
+
+        .info-table {
+            display: table;
+            width: 100%;
             text-align: left;
         }
-        
+
+        .info-row {
+            display: table-row;
+            margin-bottom: 4px;
+        }
+
         .info-label {
+            display: table-cell;
+            font-size: 11px;
+            font-weight: bold;
             color: #374151;
-            font-weight: 700;
-            min-width: 70px;
+            padding-bottom: 4px;
+            white-space: nowrap;
+            width: 52px;
         }
-        
+
         .info-sep {
+            display: table-cell;
+            font-size: 11px;
             color: #6b7280;
-            margin: 0 8px;
+            padding: 0 5px 4px 5px;
         }
-        
+
         .info-value {
+            display: table-cell;
+            font-size: 11px;
             color: #1f2937;
             font-weight: 600;
-            flex: 1;
-            word-wrap: break-word;
-            max-width: 180px;
+            padding-bottom: 4px;
+            line-height: 1.3;
         }
-        
-        .info-value.address {
-            line-height: 1.4;
-        }
-        
-        /* ── BACK CARD ────────────────────────────────────── */
+
+
+        /* ════════════════ BACK CARD ════════════════════ */
         .card-back {
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+            background: #f3f4f6;
         }
-        
-        .card-back .header-design {
+
+        /* Geometric header using table cells */
+        .back-header {
+            height: 90px;
+            background: #3b4d7a;
             position: relative;
-            height: 120px;
             overflow: hidden;
-            flex-shrink: 0;
         }
-        
-        .triangle-left {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            border-right: 160px solid transparent;
-            border-top: 120px solid #7c3aed;
+
+        /* WeasyPrint can't do CSS triangles well — use a table split approach */
+        .back-header-table {
+            display: table;
+            width: 100%;
+            height: 90px;
         }
-        
-        .triangle-right {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 0;
-            height: 0;
-            border-left: 320px solid transparent;
-            border-top: 80px solid #3b4d7a;
+
+        .back-header-purple {
+            display: table-cell;
+            width: 50%;
+            background: #7c3aed;
+            vertical-align: bottom;
         }
-        
+
+        .back-header-navy {
+            display: table-cell;
+            width: 50%;
+            background: #3b4d7a;
+            vertical-align: bottom;
+        }
+
+        /* Logo pill */
         .logo-pill {
-            display: flex;
-            justify-content: center;
-            margin: -40px 0 24px 0;
+            text-align: center;
+            margin-top: -28px;
+            margin-bottom: 16px;
             position: relative;
             z-index: 2;
         }
-        
-        .logo-pill-content {
+
+        .logo-pill-inner {
+            display: inline-block;
             background: #ffffff;
-            border-radius: 24px;
-            padding: 12px 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 60px;
+            border-radius: 20px;
+            padding: 8px 20px;
+            border: 1px solid #e0e0e0;
         }
-        
+
         .logo-pill-img {
-            height: 36px;
-            max-width: 120px;
-            object-fit: contain;
+            height: 30px;
+            max-width: 100px;
         }
-        
+
         .logo-pill-placeholder {
-            height: 36px;
-            width: 100px;
+            display: inline-block;
+            height: 30px;
+            width: 80px;
             background: #d0d0d0;
             border-radius: 4px;
         }
-        
-        .card-back .rules-section {
-            padding: 0 24px 16px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+
+        /* Rules */
+        .rules-section {
+            padding: 0 18px 14px 18px;
         }
-        
-        .rule-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 13px;
-            color: #4b5563;
-            line-height: 1.4;
+
+        .rule-table {
+            display: table;
+            width: 100%;
         }
-        
-        .rule-bullet {
+
+        .rule-row {
+            display: table-row;
+        }
+
+        .rule-bullet-cell {
+            display: table-cell;
             color: #7c3aed;
             font-weight: bold;
-            margin-top: 2px;
-            flex-shrink: 0;
+            font-size: 13px;
+            padding-right: 6px;
+            padding-bottom: 6px;
+            vertical-align: top;
+            white-space: nowrap;
         }
-        
-        .card-back .footer {
-            padding: 16px 24px;
-            margin-top: auto;
-            border-top: 1px solid rgba(107,114,128,0.2);
+
+        .rule-text-cell {
+            display: table-cell;
+            font-size: 11px;
+            color: #4b5563;
+            line-height: 1.4;
+            padding-bottom: 6px;
         }
-        
+
+        /* Footer */
+        .back-footer {
+            padding: 12px 18px;
+            border-top: 1px solid #d1d5db;
+            background: #f3f4f6;
+            margin-top: 4px;
+        }
+
         .footer-school-name {
-            font-size: 16px;
-            font-weight: 900;
+            font-size: 13px;
+            font-weight: bold;
             color: #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
-        
+
         .footer-school-address {
-            font-size: 12px;
+            font-size: 10px;
             color: #6b7280;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
-        
-        .footer-contact {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+
+        .contact-table {
+            display: table;
+            width: 100%;
         }
-        
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
+
+        .contact-row {
+            display: table-row;
+        }
+
+        .contact-icon {
+            display: table-cell;
+            width: 18px;
+            font-size: 11px;
+            padding-bottom: 3px;
+            vertical-align: middle;
+        }
+
+        .contact-text {
+            display: table-cell;
+            font-size: 11px;
             color: #4b5563;
-        }
-        
-        .contact-emoji {
-            flex-shrink: 0;
-        }
-        
-        .contact-icon-place {
-            color: #ef4444;
-        }
-        
-        .contact-icon-phone {
-            color: #ef4444;
-        }
-        
-        .contact-icon-email {
-            color: #d1d5db;
+            padding-bottom: 3px;
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
 <div class="card-container">
-    <!-- ════════════════════ FRONT CARD ════════════════════ -->
-    <div class="card card-front">
-        <!-- HEADER -->
-        <div class="header">
-            <div class="header-logo-section">
-                {% if school_logo %}
+  <div class="card-row">
+
+    <!-- ══════════ FRONT CARD ══════════ -->
+    <div class="card-cell">
+      <div class="card">
+
+        <!-- Header -->
+        <div class="front-header">
+          <div class="front-header-table">
+            <div class="front-header-left">
+              <div class="header-logo-wrap">
+                <div class="header-logo-img-cell">
+                  {% if school_logo %}
                     <img src="{{ school_logo }}" class="header-logo" alt="logo">
-                {% else %}
+                  {% else %}
                     <div class="header-logo-placeholder"></div>
-                {% endif %}
-                <div class="school-name-text">{{ school_name }}</div>
+                  {% endif %}
+                </div>
+                <div class="school-name-cell">
+                  <div class="school-name-text">{{ school_name }}</div>
+                </div>
+              </div>
             </div>
-            <div class="header-place">{{ school_place }}</div>
+            <div class="front-header-right">
+              <span class="header-place-badge">{{ school_place }}</span>
+            </div>
+          </div>
         </div>
-        
-        <!-- PHOTO SECTION -->
+
+        <!-- Photo -->
         <div class="photo-section">
-            <div class="photo-blob"></div>
-            <div class="photo-circle">
-                {% if student_photo %}
-                    <img src="{{ student_photo }}" class="photo-image" alt="student-photo">
-                {% else %}
-                    <div class="photo-placeholder"></div>
-                {% endif %}
-            </div>
+          <div class="photo-section-inner"></div>
+          <div class="photo-circle-wrap">
+            {% if student_photo %}
+              <img src="{{ student_photo }}" class="photo-image" alt="photo">
+            {% else %}
+              <div class="photo-placeholder"></div>
+            {% endif %}
+          </div>
         </div>
-        
-        <!-- STUDENT INFO -->
+
+        <!-- Info -->
         <div class="student-info">
-            <div class="student-name">{{ student_name }}</div>
-            <div class="student-class">{{ student_class }}{{ div }}</div>
-            
-            <div class="info-field">
-                <span class="info-label">Ad No</span>
-                <span class="info-sep">:</span>
-                <span class="info-value">{{ admno }}</span>
+          <div class="student-name">{{ student_name }}</div>
+          <div class="student-class">Class {{ student_class }}{% if div %} - {{ div }}{% endif %}</div>
+
+          <div class="info-table">
+            <div class="info-row">
+              <div class="info-label">Ad No</div>
+              <div class="info-sep">:</div>
+              <div class="info-value">{{ admno }}</div>
             </div>
-            
-            <div class="info-field">
-                <span class="info-label">Phone</span>
-                <span class="info-sep">:</span>
-                <span class="info-value">{{ mobile }}</span>
+            <div class="info-row">
+              <div class="info-label">Phone</div>
+              <div class="info-sep">:</div>
+              <div class="info-value">{{ mobile }}</div>
             </div>
-            
-            <div class="info-field">
-                <span class="info-label">Address</span>
-                <span class="info-sep">:</span>
-                <span class="info-value address">{{ full_address }}</span>
+            <div class="info-row">
+              <div class="info-label">Address</div>
+              <div class="info-sep">:</div>
+              <div class="info-value">{{ full_address }}</div>
             </div>
+          </div>
         </div>
-    </div>
-    
-    <!-- ════════════════════ BACK CARD ════════════════════ -->
-    <div class="card card-back">
-        <!-- HEADER DESIGN -->
-        <div class="header-design">
-            <div class="triangle-left"></div>
-            <div class="triangle-right"></div>
+
+      </div>
+    </div><!-- /front card cell -->
+
+    <!-- ══════════ BACK CARD ══════════ -->
+    <div class="card-cell">
+      <div class="card card-back">
+
+        <!-- Geometric header -->
+        <div class="back-header">
+          <div class="back-header-table">
+            <div class="back-header-purple"></div>
+            <div class="back-header-navy"></div>
+          </div>
         </div>
-        
-        <!-- LOGO PILL -->
+
+        <!-- Logo pill -->
         <div class="logo-pill">
-            <div class="logo-pill-content">
-                {% if school_logo %}
-                    <img src="{{ school_logo }}" class="logo-pill-img" alt="logo">
-                {% else %}
-                    <div class="logo-pill-placeholder"></div>
-                {% endif %}
-            </div>
+          <div class="logo-pill-inner">
+            {% if school_logo %}
+              <img src="{{ school_logo }}" class="logo-pill-img" alt="logo">
+            {% else %}
+              <div class="logo-pill-placeholder"></div>
+            {% endif %}
+          </div>
         </div>
-        
-        <!-- RULES SECTION -->
+
+        <!-- Rules -->
         <div class="rules-section">
-            <div class="rule-item">
-                <span class="rule-bullet">•</span>
-                <span>This card is issued for the academic year 2025-26</span>
+          <div class="rule-table">
+            <div class="rule-row">
+              <div class="rule-bullet-cell">•</div>
+              <div class="rule-text-cell">This card is issued for the academic year {{ academic_year|default:"2025-26" }}</div>
             </div>
-            <div class="rule-item">
-                <span class="rule-bullet">•</span>
-                <span>This card is non-transferable.</span>
+            <div class="rule-row">
+              <div class="rule-bullet-cell">•</div>
+              <div class="rule-text-cell">This card is non-transferable.</div>
             </div>
-            <div class="rule-item">
-                <span class="rule-bullet">•</span>
-                <span>Always carry your card during school hours.</span>
+            <div class="rule-row">
+              <div class="rule-bullet-cell">•</div>
+              <div class="rule-text-cell">Always carry your card during school hours.</div>
             </div>
-            <div class="rule-item">
-                <span class="rule-bullet">•</span>
-                <span>In case of loss, inform issuing authority.</span>
+            <div class="rule-row">
+              <div class="rule-bullet-cell">•</div>
+              <div class="rule-text-cell">In case of loss, inform issuing authority immediately.</div>
             </div>
-            <div class="rule-item">
-                <span class="rule-bullet">•</span>
-                <span>If found, please post it to given address</span>
+            <div class="rule-row">
+              <div class="rule-bullet-cell">•</div>
+              <div class="rule-text-cell">If found, please post it to the address given below.</div>
             </div>
+          </div>
         </div>
-        
-        <!-- FOOTER -->
-        <div class="footer">
-            <div class="footer-school-name">{{ school_name }}</div>
-            <div class="footer-school-address">{{ school_address }}</div>
-            <div class="footer-contact">
-                <div class="contact-item">
-                    <span class="contact-emoji contact-icon-place">📍</span>
-                    <span>{{ school_place }}</span>
-                </div>
-                <div class="contact-item">
-                    <span class="contact-emoji contact-icon-phone">📞</span>
-                    <span>{{ school_phone }}</span>
-                </div>
-                <div class="contact-item">
-                    <span class="contact-emoji contact-icon-email">✉️</span>
-                    <span>{{ school_email }}</span>
-                </div>
+
+        <!-- Footer -->
+        <div class="back-footer">
+          <div class="footer-school-name">{{ school_name }}</div>
+          <div class="footer-school-address">{{ school_address }}</div>
+          <div class="contact-table">
+            <div class="contact-row">
+              <div class="contact-icon">📍</div>
+              <div class="contact-text">{{ school_place }}</div>
             </div>
+            <div class="contact-row">
+              <div class="contact-icon">📞</div>
+              <div class="contact-text">{{ school_phone }}</div>
+            </div>
+            <div class="contact-row">
+              <div class="contact-icon">✉</div>
+              <div class="contact-text">{{ school_email }}</div>
+            </div>
+          </div>
         </div>
-    </div>
-</div>
+
+      </div>
+    </div><!-- /back card cell -->
+
+  </div><!-- /card-row -->
+</div><!-- /card-container -->
 </body>
 </html>

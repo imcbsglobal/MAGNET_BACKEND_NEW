@@ -524,7 +524,30 @@ def generate_id_card_pdf(request):
         data = request.data
         student = data.get('student', {})
         school = data.get('school', {})
+        
+        # Robustness: Fetch latest details from database if possible
+        institution_id = student.get('institution_id') or data.get('institution_id')
+        admno = student.get('admno')
+        
         details = data.get('details', {})
+        if institution_id and admno:
+            try:
+                form = IDCardForm.objects.get(institution_id=institution_id, admno=admno)
+                details = {
+                    'student_name': form.student_name,
+                    'place': form.place,
+                    'district': form.district,
+                    'city': form.city,
+                    'state': form.state,
+                    'pin': form.pin,
+                    'phone': form.phone,
+                    'email': form.email,
+                    'father_name': form.father_name,
+                    'mother_name': form.mother_name,
+                    'dob': form.dob.isoformat() if form.dob else '',
+                }
+            except IDCardForm.DoesNotExist:
+                pass
 
         # Fetch and convert images to base64
         student_photo_b64 = _fetch_image_as_base64(student.get('photo_url'))
@@ -539,13 +562,13 @@ def generate_id_card_pdf(request):
             details.get('pin'),
         ]))
 
-        # Prepare context
+        # Prepare context using details (parent submitted form data) where available
         context = {
-            'student_name': (student.get('student_name') or '').upper(),
+            'student_name': (details.get('student_name') or student.get('student_name') or '').upper(),
             'student_class': student.get('student_class', ''),
             'div': student.get('div', ''),
             'admno': student.get('admno', ''),
-            'mobile': student.get('mobile', ''),
+            'mobile': details.get('phone') or student.get('mobile', ''),
             'school_name': school.get('school_name', ''),
             'school_address': school.get('address', ''),
             'school_place': school.get('place', ''),
@@ -679,11 +702,11 @@ def generate_bulk_id_card_pdf(request):
             ]))
 
             context = {
-                'student_name': (student.get('student_name') or '').upper(),
+                'student_name': (details.get('student_name') or student.get('student_name') or '').upper(),
                 'student_class': student.get('student_class', ''),
                 'div': student.get('div', ''),
                 'admno': student.get('admno', ''),
-                'mobile': student.get('mobile', ''),
+                'mobile': details.get('phone') or student.get('mobile', ''),
                 'school_name': school.get('school_name', ''),
                 'school_address': school.get('address', ''),
                 'school_place': school.get('place', ''),

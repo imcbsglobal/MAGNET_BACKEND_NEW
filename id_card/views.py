@@ -705,7 +705,7 @@ def generate_bulk_id_card_pdf(request):
         all_html = (
             '<!DOCTYPE html><html><head><meta charset="UTF-8">'
             '<style>'
-            '@page { size: 720px 540px; margin: 0; }'
+            '@page { size: 116mm 92mm; margin: 0; }'
             '.page-wrap { page-break-after: always; }'
             '.page-wrap:last-child { page-break-after: avoid; }'
             '</style></head><body>'

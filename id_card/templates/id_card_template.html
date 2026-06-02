@@ -11,24 +11,22 @@
         }
 
         @page {
-            size: 720px 540px;
+            size: 116mm 92mm; /* Slightly larger than 108x86 to avoid clipping */
             margin: 0;
         }
 
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            background: #e5e7eb;
-            width: 720px;
-            height: 540px;
+            background: #f0f2f5;
+            padding: 3mm;
         }
 
         /* ─── CARD WRAPPER ──────────────────────────────── */
         .card-container {
             display: table;
-            width: 720px;
-            height: 540px;
-            background: #e5e7eb;
-            padding: 20px 24px;
+            width: 110mm;
+            height: 86mm;
+            margin: 0 auto;
         }
 
         .card-row {
@@ -38,69 +36,49 @@
         .card-cell {
             display: table-cell;
             vertical-align: top;
-            padding: 0 8px;
+            padding: 0 1mm;
         }
 
-        /* ─── BOTH CARDS ────────────────────────────────── */
+        /* ─── BOTH CARDS (CR80 Standard: 54x86mm) ───────── */
         .card {
-            width: 310px;
-            border-radius: 16px;
+            width: 54mm;
+            height: 86mm;
+            border-radius: 4mm;
             overflow: hidden;
             background: #ffffff;
-            border: 1px solid #e0e0e0;
-            /* WeasyPrint box-shadow workaround */
-            -weasy-border-radius: 16px;
+            position: relative;
+            /* -weasy-border-radius for WeasyPrint */
+            -weasy-border-radius: 4mm;
         }
 
         /* ════════════════ FRONT CARD ═══════════════════ */
 
-        /* Header row */
         .front-header {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 12px 14px;
-            height: 68px;
-        }
-
-        .front-header-table {
+            padding: 3mm 3.5mm;
             display: table;
             width: 100%;
+            height: 14mm;
         }
 
-        .front-header-left {
+        .header-left {
             display: table-cell;
             vertical-align: middle;
-            width: 70%;
         }
 
-        .front-header-right {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: right;
-        }
-
-        .header-logo-wrap {
+        .header-logo-name {
             display: table;
         }
 
-        .header-logo-img-cell {
+        .header-logo-cell {
             display: table-cell;
             vertical-align: middle;
-            padding-right: 8px;
+            padding-right: 1.5mm;
         }
 
         .header-logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
-        }
-
-        .header-logo-placeholder {
-            width: 40px;
-            height: 40px;
-            background: #d0d0d0;
-            border-radius: 6px;
-            display: table-cell;
+            width: 8mm;
+            height: 8mm;
+            object-fit: contain;
         }
 
         .school-name-cell {
@@ -109,92 +87,89 @@
         }
 
         .school-name-text {
-            font-size: 11px;
-            font-weight: bold;
-            color: #1f2937;
+            font-size: 7pt;
+            font-weight: 800;
+            color: #1a237e;
+            line-height: 1.1;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            line-height: 1.2;
         }
 
-        .header-place-badge {
-            background: #3b4d7a;
+        .header-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+        }
+
+        .place-badge {
+            background: #283593;
             color: #ffffff;
-            font-size: 10px;
+            font-size: 6pt;
             font-weight: bold;
-            padding: 5px 8px;
-            border-radius: 6px;
-            white-space: nowrap;
+            padding: 1mm 2mm;
+            border-radius: 1.5mm;
             display: inline-block;
-        }
-
-        /* Photo section */
-        .photo-section {
-            height: 200px;
-            background: #5b21b6;
-            position: relative;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        /* Purple gradient bg using a table fill */
-        .photo-section-inner {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #6d28d9;
-        }
-
-        .photo-circle-wrap {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            margin-top: -58px;
-            margin-left: -58px;
-            width: 116px;
-            height: 116px;
-            border-radius: 58px;
-            border: 4px solid #ffffff;
-            background: #ffffff;
-            overflow: hidden;
-        }
-
-        .photo-image {
-            width: 108px;
-            height: 108px;
-            border-radius: 54px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .photo-placeholder {
-            width: 108px;
-            height: 108px;
-            background: #d0d0d0;
-            border-radius: 54px;
-            display: block;
-        }
-
-        /* Student info */
-        .student-info {
-            padding: 14px 16px 12px 16px;
-            background: #ffffff;
-            text-align: center;
-        }
-
-        .student-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-bottom: 2px;
         }
 
-        .student-class {
-            font-size: 14px;
-            font-weight: bold;
-            color: #7c3aed;
-            margin-bottom: 10px;
+        /* Photo & Curve Section */
+        .photo-area {
+            position: relative;
+            height: 34mm;
+            overflow: hidden;
+        }
+
+        .purple-curve {
+            position: absolute;
+            top: 0;
+            left: -10mm;
+            width: 48mm;
+            height: 48mm;
+            background: #4527a0;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .photo-circle {
+            position: absolute;
+            top: 4mm;
+            left: 50%;
+            margin-left: -13mm;
+            width: 26mm;
+            height: 26mm;
+            border-radius: 50%;
+            border: 1.5mm solid #ffffff;
+            background: #ffffff;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .student-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Student Info */
+        .student-body {
+            padding: 2mm 4mm;
+            text-align: center;
+            position: relative;
+            z-index: 3;
+        }
+
+        .name-text {
+            font-size: 10pt;
+            font-weight: 800;
+            color: #1a237e;
+            text-transform: uppercase;
+            margin-bottom: 0.5mm;
+        }
+
+        .class-text {
+            font-size: 9pt;
+            font-weight: 800;
+            color: #7e57c2;
+            margin-bottom: 2mm;
         }
 
         .info-table {
@@ -205,178 +180,172 @@
 
         .info-row {
             display: table-row;
-            margin-bottom: 4px;
         }
 
         .info-label {
             display: table-cell;
-            font-size: 11px;
+            font-size: 6.5pt;
             font-weight: bold;
-            color: #374151;
-            padding-bottom: 4px;
-            white-space: nowrap;
-            width: 52px;
+            color: #283593;
+            padding-bottom: 0.8mm;
+            width: 12mm;
         }
 
         .info-sep {
             display: table-cell;
-            font-size: 11px;
-            color: #6b7280;
-            padding: 0 5px 4px 5px;
+            font-size: 6.5pt;
+            color: #283593;
+            padding: 0 1mm 0.8mm 1mm;
+            width: 2mm;
         }
 
-        .info-value {
+        .info-val {
             display: table-cell;
-            font-size: 11px;
-            color: #1f2937;
+            font-size: 6.5pt;
             font-weight: 600;
-            padding-bottom: 4px;
-            line-height: 1.3;
+            color: #333333;
+            padding-bottom: 0.8mm;
+            line-height: 1.2;
         }
 
+        /* Bottom Pattern */
+        .grid-pattern {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 15mm;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(45deg, #283593 25%, transparent 25%), 
+                linear-gradient(-45deg, #283593 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #283593 75%), 
+                linear-gradient(-45deg, transparent 75%, #283593 75%);
+            background-size: 4mm 4mm;
+            background-position: 0 0, 0 2mm, 2mm 2mm, 2mm 0;
+            z-index: 1;
+        }
 
         /* ════════════════ BACK CARD ════════════════════ */
         .card-back {
-            background: #f3f4f6;
+            background: #f8f9fa;
         }
 
-        /* Geometric header using table cells */
         .back-header {
-            height: 90px;
-            background: #3b4d7a;
+            height: 18mm;
             position: relative;
             overflow: hidden;
         }
 
-        /* WeasyPrint can't do CSS triangles well — use a table split approach */
-        .back-header-table {
-            display: table;
-            width: 100%;
-            height: 90px;
+        .back-curve-purple {
+            position: absolute;
+            top: -15mm;
+            left: -15mm;
+            width: 40mm;
+            height: 40mm;
+            background: #7e57c2;
+            border-radius: 50%;
         }
 
-        .back-header-purple {
-            display: table-cell;
-            width: 50%;
-            background: #7c3aed;
-            vertical-align: bottom;
+        .back-curve-navy {
+            position: absolute;
+            top: -25mm;
+            right: -10mm;
+            width: 50mm;
+            height: 50mm;
+            background: #1a237e;
+            border-radius: 50%;
         }
 
-        .back-header-navy {
-            display: table-cell;
-            width: 50%;
-            background: #3b4d7a;
-            vertical-align: bottom;
-        }
-
-        /* Logo pill */
-        .logo-pill {
+        .logo-pill-container {
             text-align: center;
-            margin-top: -28px;
-            margin-bottom: 16px;
+            margin-top: -8mm;
+            margin-bottom: 3mm;
             position: relative;
-            z-index: 2;
+            z-index: 10;
         }
 
-        .logo-pill-inner {
+        .logo-pill {
             display: inline-block;
             background: #ffffff;
-            border-radius: 20px;
-            padding: 8px 20px;
-            border: 1px solid #e0e0e0;
+            border-radius: 3mm;
+            padding: 2mm 4mm;
+            box-shadow: 0 1mm 3mm rgba(0,0,0,0.1);
         }
 
         .logo-pill-img {
-            height: 30px;
-            max-width: 100px;
+            height: 6mm;
+            max-width: 20mm;
+            object-fit: contain;
         }
 
-        .logo-pill-placeholder {
-            display: inline-block;
-            height: 30px;
-            width: 80px;
-            background: #d0d0d0;
-            border-radius: 4px;
+        .rules-container {
+            padding: 0 5mm;
         }
 
-        /* Rules */
-        .rules-section {
-            padding: 0 18px 14px 18px;
-        }
-
-        .rule-table {
+        .rule-item {
             display: table;
             width: 100%;
+            margin-bottom: 1.5mm;
         }
 
-        .rule-row {
-            display: table-row;
-        }
-
-        .rule-bullet-cell {
+        .rule-bullet {
             display: table-cell;
-            color: #7c3aed;
-            font-weight: bold;
-            font-size: 13px;
-            padding-right: 6px;
-            padding-bottom: 6px;
+            width: 3mm;
+            color: #283593;
+            font-size: 10pt;
             vertical-align: top;
-            white-space: nowrap;
+            padding-top: -0.5mm;
         }
 
-        .rule-text-cell {
+        .rule-text {
             display: table-cell;
-            font-size: 11px;
-            color: #4b5563;
-            line-height: 1.4;
-            padding-bottom: 6px;
+            font-size: 6.5pt;
+            color: #444444;
+            line-height: 1.3;
         }
 
-        /* Footer */
         .back-footer {
-            padding: 12px 18px;
-            border-top: 1px solid #d1d5db;
-            background: #f3f4f6;
-            margin-top: 4px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 3mm 5mm;
+            border-top: 0.2mm solid #e0e0e0;
+            background: #ffffff;
         }
 
         .footer-school-name {
-            font-size: 13px;
-            font-weight: bold;
-            color: #1f2937;
+            font-size: 7.5pt;
+            font-weight: 800;
+            color: #1a237e;
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 0.5mm;
         }
 
-        .footer-school-address {
-            font-size: 10px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-
-        .contact-table {
-            display: table;
-            width: 100%;
+        .footer-sub-name {
+            font-size: 6pt;
+            color: #666666;
+            margin-bottom: 2mm;
         }
 
         .contact-row {
-            display: table-row;
+            display: table;
+            width: 100%;
+            margin-bottom: 0.8mm;
         }
 
         .contact-icon {
             display: table-cell;
-            width: 18px;
-            font-size: 11px;
-            padding-bottom: 3px;
-            vertical-align: middle;
+            width: 4mm;
+            font-size: 7pt;
+            color: #e91e63;
         }
 
-        .contact-text {
+        .contact-val {
             display: table-cell;
-            font-size: 11px;
-            color: #4b5563;
-            padding-bottom: 3px;
-            vertical-align: middle;
+            font-size: 6.5pt;
+            color: #333333;
         }
     </style>
 </head>
@@ -387,62 +356,61 @@
     <!-- ══════════ FRONT CARD ══════════ -->
     <div class="card-cell">
       <div class="card">
+        <div class="grid-pattern"></div>
 
         <!-- Header -->
         <div class="front-header">
-          <div class="front-header-table">
-            <div class="front-header-left">
-              <div class="header-logo-wrap">
-                <div class="header-logo-img-cell">
-                  {% if school_logo %}
-                    <img src="{{ school_logo }}" class="header-logo" alt="logo">
-                  {% else %}
-                    <div class="header-logo-placeholder"></div>
-                  {% endif %}
-                </div>
-                <div class="school-name-cell">
-                  <div class="school-name-text">{{ school_name }}</div>
-                </div>
+          <div class="header-left">
+            <div class="header-logo-name">
+              <div class="header-logo-cell">
+                {% if school_logo %}
+                  <img src="{{ school_logo }}" class="header-logo" alt="logo">
+                {% else %}
+                  <div style="width: 8mm; height: 8mm; background: #eee; border-radius: 1mm;"></div>
+                {% endif %}
+              </div>
+              <div class="school-name-cell">
+                <div class="school-name-text">{{ school_name }}</div>
               </div>
             </div>
-            <div class="front-header-right">
-              <span class="header-place-badge">{{ school_place }}</span>
-            </div>
+          </div>
+          <div class="header-right">
+            <div class="place-badge">{{ school_place }}</div>
           </div>
         </div>
 
         <!-- Photo -->
-        <div class="photo-section">
-          <div class="photo-section-inner"></div>
-          <div class="photo-circle-wrap">
+        <div class="photo-area">
+          <div class="purple-curve"></div>
+          <div class="photo-circle">
             {% if student_photo %}
-              <img src="{{ student_photo }}" class="photo-image" alt="photo">
+              <img src="{{ student_photo }}" class="student-photo" alt="photo">
             {% else %}
-              <div class="photo-placeholder"></div>
+              <div style="width: 100%; height: 100%; background: #eee;"></div>
             {% endif %}
           </div>
         </div>
 
         <!-- Info -->
-        <div class="student-info">
-          <div class="student-name">{{ student_name }}</div>
-          <div class="student-class">Class {{ student_class }}{% if div %} - {{ div }}{% endif %}</div>
+        <div class="student-body">
+          <div class="name-text">{{ student_name }}</div>
+          <div class="class-text">{{ student_class }}{% if div %} {{ div }}{% endif %}</div>
 
           <div class="info-table">
             <div class="info-row">
               <div class="info-label">Ad No</div>
               <div class="info-sep">:</div>
-              <div class="info-value">{{ admno }}</div>
+              <div class="info-val">{{ admno }}</div>
             </div>
             <div class="info-row">
               <div class="info-label">Phone</div>
               <div class="info-sep">:</div>
-              <div class="info-value">{{ mobile }}</div>
+              <div class="info-val">{{ mobile }}</div>
             </div>
             <div class="info-row">
               <div class="info-label">Address</div>
               <div class="info-sep">:</div>
-              <div class="info-value">{{ full_address }}</div>
+              <div class="info-val">{{ full_address }}</div>
             </div>
           </div>
         </div>
@@ -454,68 +422,63 @@
     <div class="card-cell">
       <div class="card card-back">
 
-        <!-- Geometric header -->
+        <!-- Header -->
         <div class="back-header">
-          <div class="back-header-table">
-            <div class="back-header-purple"></div>
-            <div class="back-header-navy"></div>
-          </div>
+          <div class="back-curve-purple"></div>
+          <div class="back-curve-navy"></div>
         </div>
 
         <!-- Logo pill -->
-        <div class="logo-pill">
-          <div class="logo-pill-inner">
+        <div class="logo-pill-container">
+          <div class="logo-pill">
             {% if school_logo %}
               <img src="{{ school_logo }}" class="logo-pill-img" alt="logo">
             {% else %}
-              <div class="logo-pill-placeholder"></div>
+              <div style="width: 15mm; height: 5mm; background: #eee;"></div>
             {% endif %}
           </div>
         </div>
 
         <!-- Rules -->
-        <div class="rules-section">
-          <div class="rule-table">
-            <div class="rule-row">
-              <div class="rule-bullet-cell">•</div>
-              <div class="rule-text-cell">This card is issued for the academic year {{ academic_year|default:"2025-26" }}</div>
-            </div>
-            <div class="rule-row">
-              <div class="rule-bullet-cell">•</div>
-              <div class="rule-text-cell">This card is non-transferable.</div>
-            </div>
-            <div class="rule-row">
-              <div class="rule-bullet-cell">•</div>
-              <div class="rule-text-cell">Always carry your card during school hours.</div>
-            </div>
-            <div class="rule-row">
-              <div class="rule-bullet-cell">•</div>
-              <div class="rule-text-cell">In case of loss, inform issuing authority immediately.</div>
-            </div>
-            <div class="rule-row">
-              <div class="rule-bullet-cell">•</div>
-              <div class="rule-text-cell">If found, please post it to the address given below.</div>
-            </div>
+        <div class="rules-container">
+          <div class="rule-item">
+            <div class="rule-bullet">•</div>
+            <div class="rule-text">This card is issued for the academic year {{ academic_year|default:"2025-26" }}</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-bullet">•</div>
+            <div class="rule-text">This card is non-transferable.</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-bullet">•</div>
+            <div class="rule-text">Always carry your card during school hours.</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-bullet">•</div>
+            <div class="rule-text">In case of loss, inform issuing authority.</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-bullet">•</div>
+            <div class="rule-text">If found, please post it to given address</div>
           </div>
         </div>
 
         <!-- Footer -->
         <div class="back-footer">
           <div class="footer-school-name">{{ school_name }}</div>
-          <div class="footer-school-address">{{ school_address }}</div>
-          <div class="contact-table">
-            <div class="contact-row">
-              <div class="contact-icon">📍</div>
-              <div class="contact-text">{{ school_place }}</div>
-            </div>
-            <div class="contact-row">
-              <div class="contact-icon">📞</div>
-              <div class="contact-text">{{ school_phone }}</div>
-            </div>
-            <div class="contact-row">
-              <div class="contact-icon">✉</div>
-              <div class="contact-text">{{ school_email }}</div>
-            </div>
+          <div class="footer-sub-name">{{ school_name }}</div>
+          
+          <div class="contact-row">
+            <div class="contact-icon">📍</div>
+            <div class="contact-val">{{ school_place }}</div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-icon">📞</div>
+            <div class="contact-val">{{ school_phone }}</div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-icon">✉</div>
+            <div class="contact-val">{{ school_email }}</div>
           </div>
         </div>
 
@@ -524,5 +487,6 @@
 
   </div><!-- /card-row -->
 </div><!-- /card-container -->
+
 </body>
 </html>

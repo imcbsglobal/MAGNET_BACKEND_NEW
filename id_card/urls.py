@@ -14,4 +14,7 @@ urlpatterns = [
     # PDF generation endpoints
     path('generate-pdf/', views.generate_id_card_pdf, name='generate_id_card_pdf'),
     path('generate-bulk-pdf/', views.generate_bulk_id_card_pdf, name='generate_bulk_id_card_pdf'),
+    # Form status management
+    path('form-status/', views.id_card_form_status, name='id_card_form_status'),
+    path('toggle-form/', views.toggle_id_card_form, name='toggle_id_card_form'),
 ]

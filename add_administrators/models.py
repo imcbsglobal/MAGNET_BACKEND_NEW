@@ -32,6 +32,7 @@ class SchoolInfo(models.Model):
     email = models.EmailField()
     logo_url = models.URLField(max_length=500, blank=True, null=True)
     logo_public_id = models.CharField(max_length=255, blank=True, null=True)
+    id_card_form_enabled = models.BooleanField(default=True)  # Enable/disable ID card form link
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

@@ -123,22 +123,53 @@ def _serialize_id_card(student, form=None):
 
 
 @api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
 def id_card_student_list(request):
+    print(f"🔍 ID Card API called with params: {request.GET}")
+    print(f"👤 User: {request.user}")
+    print(f"🔑 Headers: {dict(request.headers)}")
+    
     institution_id = request.GET.get('institution_id')
     student_class = request.GET.get('student_class')
     div = request.GET.get('div')
+    admin_mode = request.GET.get('admin_mode', 'false').lower() == 'true'
+
+    print(f"📊 Parameters: institution_id={institution_id}, admin_mode={admin_mode}")
 
     if not institution_id:
+        print("❌ No institution_id provided")
         return JsonResponse({'message': 'institution_id required'}, status=400)
 
+    print(f"📋 Loading students for institution: {institution_id}")
+    
     students = StudentData.objects.filter(institution_id=institution_id)
-    if student_class:
-        students = students.filter(student_class=student_class)
-    if div:
-        students = students.filter(div=div)
+    
+    # If not admin mode, filter by class and division as before
+    if not admin_mode:
+        if student_class:
+            students = students.filter(student_class=student_class)
+        if div:
+            students = students.filter(div=div)
+
+    print(f"👥 Found {students.count()} students after filtering")
 
     forms = { (form.institution_id, form.admno): form for form in IDCardForm.objects.filter(institution_id=institution_id) }
-    data = [_serialize_id_card(student, forms.get((student.institution_id, student.admno))) for student in students.order_by('student_class', 'div', 'student_name')]
+    print(f"📝 Found {len(forms)} ID card forms")
+    
+    if admin_mode:
+        # Admin mode: only return students who have submitted ID card forms
+        data = []
+        for student in students.order_by('student_class', 'div', 'student_name'):
+            form = forms.get((student.institution_id, student.admno))
+            if form and form.status == IDCardForm.STATUS_USED:  # Only submitted forms
+                data.append(_serialize_id_card(student, form))
+        print(f"✅ Admin mode: returning {len(data)} submitted forms")
+    else:
+        # Teacher mode: return all students (submitted and not submitted)
+        data = [_serialize_id_card(student, forms.get((student.institution_id, student.admno))) for student in students.order_by('student_class', 'div', 'student_name')]
+        print(f"✅ Teacher mode: returning {len(data)} students")
+    
     return JsonResponse(data, safe=False)
 
 
@@ -225,15 +256,35 @@ def submit_id_card_form(request):
 def lookup_by_phone(request):
     """Step 1: parent enters phone number → returns all matching students."""
     phone = request.data.get('phone', '').strip()
+    institution_id = request.data.get('institution_id', '').strip()  # Client ID from URL
+    
     if not phone:
         return JsonResponse({'message': 'Phone number is required.'}, status=400)
+
+    # If institution_id provided (from client ID URL), check if form is enabled
+    if institution_id:
+        try:
+            from add_administrators.models import SchoolInfo
+            school_info = SchoolInfo.objects.get(institution_id=institution_id)
+            if not school_info.id_card_form_enabled:
+                return JsonResponse({'message': 'ID card form is currently disabled for this institution.'}, status=403)
+        except SchoolInfo.DoesNotExist:
+            return JsonResponse({'message': 'Institution not found.'}, status=404)
 
     digits = re.sub(r'\D', '', phone)
     last10 = digits[-10:] if len(digits) >= 10 else digits
 
     students = StudentData.objects.filter(mobile__endswith=last10)
+    
+    # If institution_id provided, filter by that specific institution
+    if institution_id:
+        students = students.filter(institution_id=institution_id)
+    
     if not students.exists():
-        return JsonResponse({'message': 'No student found with this phone number. Please check and try again.'}, status=404)
+        if institution_id:
+            return JsonResponse({'message': f'No student found with this phone number in institution {institution_id}. Please check and try again.'}, status=404)
+        else:
+            return JsonResponse({'message': 'No student found with this phone number. Please check and try again.'}, status=404)
 
     results = []
     for student in students:
@@ -527,6 +578,62 @@ def generate_id_card_pdf(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'status': False, 'message': f'PDF generation failed: {str(e)}'}, status=500)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def id_card_form_status(request):
+    """Check if ID card form is enabled for an institution."""
+    institution_id = request.GET.get('institution_id')
+    if not institution_id:
+        return JsonResponse({'message': 'institution_id required'}, status=400)
+    
+    try:
+        from add_administrators.models import SchoolInfo
+        school_info = SchoolInfo.objects.get(institution_id=institution_id)
+        return JsonResponse({
+            'enabled': school_info.id_card_form_enabled,
+            'school_name': school_info.school_name,
+        })
+    except SchoolInfo.DoesNotExist:
+        return JsonResponse({'message': 'Institution not found'}, status=404)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def toggle_id_card_form(request):
+    """Enable/disable ID card form for an institution (admin only)."""
+    institution_id = request.data.get('institution_id')
+    enabled = request.data.get('enabled', True)
+    
+    if not institution_id:
+        return JsonResponse({'message': 'institution_id required'}, status=400)
+    
+    try:
+        from add_administrators.models import SchoolInfo
+        school_info, created = SchoolInfo.objects.get_or_create(
+            institution_id=institution_id,
+            defaults={
+                'school_name': f'School {institution_id}',
+                'address': '',
+                'place': '',
+                'pincode': '',
+                'phone': '',
+                'email': '',
+            }
+        )
+        school_info.id_card_form_enabled = enabled
+        school_info.save()
+        
+        return JsonResponse({
+            'status': True, 
+            'enabled': enabled,
+            'message': f'ID card form has been {"enabled" if enabled else "disabled"}.'
+        })
+    except Exception as e:
+        return JsonResponse({'message': f'Failed to update status: {str(e)}'}, status=500)
 
 
 @api_view(['POST'])

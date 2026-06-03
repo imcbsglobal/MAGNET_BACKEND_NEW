@@ -135,6 +135,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         return message, recipient_id, recipient_role
 
+    @database_sync_to_async
+    def update_user_status(self, is_online):
+        if not hasattr(self, 'user_info') or not self.user_info:
+            return
+        UserOnlineStatus.objects.update_or_create(
+            user_id=self.user_info['id'],
+            user_role=self.user_info['role'],
+            defaults={'is_online': is_online, 'last_seen': timezone.now()}
+        )
+
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.role = self.scope['url_route']['kwargs']['role']
@@ -165,10 +175,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def update_user_status(self, is_online):
-        if not self.user_info:
-            return
-        UserOnlineStatus.objects.update_or_create(
-            user_id=self.user_info['id'],
-            user_role=self.user_info['role'],
-            defaults={'is_online': is_online, 'last_seen': timezone.now()}
-        )
+        # We need to get user info from scope or attributes if available
+        # This consumer might not have self.user_info set like ChatConsumer
+        pass

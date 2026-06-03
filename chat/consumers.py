@@ -119,21 +119,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_message(self, sender_id, sender_role, content):
-        room = ChatRoom.objects.get(id=self.room_id)
-        message = Message.objects.create(
-            room=room,
-            sender_id=sender_id,
-            sender_role=sender_role,
-            content=content
-        )
-        # Update room's updated_at
-        room.save() 
-        
-        # Determine recipient to send notification
-        recipient_id = room.student_id if sender_role == 'teacher' else room.teacher_id
-        recipient_role = 'student' if sender_role == 'teacher' else 'teacher'
-        
-        return message, recipient_id, recipient_role
+        try:
+            # Ensure room_id is an integer
+            rid = int(self.room_id)
+            room = ChatRoom.objects.get(id=rid)
+            
+            message = Message.objects.create(
+                room=room,
+                sender_id=int(sender_id),
+                sender_role=sender_role,
+                content=content
+            )
+            
+            # Update room's updated_at
+            room.save() 
+            
+            # Determine recipient to send notification
+            recipient_id = room.student_id if sender_role == 'teacher' else room.teacher_id
+            recipient_role = 'student' if sender_role == 'teacher' else 'teacher'
+            
+            return message, recipient_id, recipient_role
+        except Exception as e:
+            print(f"Error in save_message: {str(e)}")
+            raise e
 
     @database_sync_to_async
     def update_user_status(self, is_online):

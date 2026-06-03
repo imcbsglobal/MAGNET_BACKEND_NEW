@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ['magnetpro.in', 'www.magnetpro.in', 'localhost', '127.0.0.1', '
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'channels',
     'student_data',
     'logins',
     'add_administrators',
@@ -55,7 +57,19 @@ INSTALLED_APPS = [
     'attendance',
     'calendar_setup',
     'id_card',
+    'chat',
 ]
+
+ASGI_APPLICATION = 'magnetapp_backend.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

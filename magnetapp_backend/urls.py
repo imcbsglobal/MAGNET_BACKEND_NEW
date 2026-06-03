@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/attendance/', include('attendance.urls')),
     path('api/calendar/', include('calendar_setup.urls')),
     path('api/id-card/', include('id_card.urls')),
+    path('api/chat/', include('chat.urls')),
     path('id-card/', include('id_card.urls')),
     path('api/', include('add_administrators.urls')),
     path('api/', include('logins.urls')),

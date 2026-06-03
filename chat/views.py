@@ -70,9 +70,14 @@ def get_assigned_contacts(request):
                     'div': student.div,
                     'room_id': room.id if room else None,
                     'last_message': room.messages.last().content if (room and room.messages.exists()) else '',
+                    'last_message_time': room.updated_at.isoformat() if room else '0001-01-01T00:00:00Z',
                     'unread_count': room.messages.filter(is_read=False, sender_role='student').count() if room else 0,
                     'is_online': online_statuses.get(student.id, False)
                 })
+            
+            # Sort data by last_message_time descending
+            data.sort(key=lambda x: x['last_message_time'], reverse=True)
+            
             return JsonResponse({'status': True, 'contacts': data})
 
         elif role == 'parent' or role == 'student':
@@ -112,9 +117,14 @@ def get_assigned_contacts(request):
                     'role': 'teacher',
                     'room_id': room.id if room else None,
                     'last_message': room.messages.last().content if (room and room.messages.exists()) else '',
+                    'last_message_time': room.updated_at.isoformat() if room else '0001-01-01T00:00:00Z',
                     'unread_count': room.messages.filter(is_read=False, sender_role='teacher').count() if room else 0,
                     'is_online': online_statuses.get(teacher.id, False)
                 })
+            
+            # Sort data by last_message_time descending
+            data.sort(key=lambda x: x['last_message_time'], reverse=True)
+            
             return JsonResponse({'status': True, 'contacts': data})
 
     except Exception as e:
@@ -269,6 +279,9 @@ def upload_chat_file(request):
                 content=message_content
             )
             
+            # Update room's updated_at
+            room.save()
+            
             # Save metadata only, we use R2 URL for access
             attachment = ChatAttachment.objects.create(
                 message=message,
@@ -365,6 +378,9 @@ def send_bulk_message(request):
                     sender_role='teacher',
                     content=content
                 )
+
+                # Update room's updated_at
+                room.save()
 
                 # 3. Broadcast via WebSocket to the room
                 async_to_sync(channel_layer.group_send)(

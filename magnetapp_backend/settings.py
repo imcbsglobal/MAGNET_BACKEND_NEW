@@ -66,8 +66,9 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [('localhost', 6379)],
             "symmetric_encryption_keys": [SECRET_KEY],
+            "on_proxy_headers": True, # Helps in Nginx environments
         },
     },
 }

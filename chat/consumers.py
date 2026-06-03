@@ -62,6 +62,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
                 # Save message to database
                 saved_message, recipient_id, recipient_role = await self.save_message(sender_id, sender_role, content)
+                
+                if not saved_message:
+                    print("Message could not be saved because the room is missing.")
+                    return
+
                 print(f"Message saved: ID {saved_message.id}")
 
                 # Send message to room group
@@ -130,10 +135,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, sender_id, sender_role, content):
         try:
-            # Ensure room_id is an integer
             rid = int(self.room_id)
-            room = ChatRoom.objects.get(id=rid)
+            # Use filter().first() instead of get() to avoid crash if room is missing
+            room = ChatRoom.objects.filter(id=rid).first()
             
+            if not room:
+                print(f"Room {rid} not found. It might have been deleted.")
+                return None, None, None
+
             message = Message.objects.create(
                 room=room,
                 sender_id=int(sender_id),

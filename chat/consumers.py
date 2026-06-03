@@ -35,24 +35,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data):
         try:
+            print(f"Received WebSocket data in room {self.room_id}: {text_data}")
             data = json.loads(text_data)
             message_type = data.get('type')
 
             if message_type == 'init':
                 # Initialize user info for status tracking
-                self.user_info = {
-                    'id': data.get('user_id'),
-                    'role': data.get('role')
-                }
-                await self.update_user_status(True)
+                uid = data.get('user_id')
+                role = data.get('role')
+                if uid and role:
+                    self.user_info = {
+                        'id': int(uid),
+                        'role': role
+                    }
+                    await self.update_user_status(True)
+                    print(f"User {uid} ({role}) initialized in room {self.room_id}")
                 
             elif message_type == 'chat_message':
                 content = data.get('message')
                 sender_id = data.get('sender_id')
                 sender_role = data.get('sender_role')
 
+                if not content or not sender_id or not sender_role:
+                    print(f"Invalid message data: {data}")
+                    return
+
                 # Save message to database
                 saved_message, recipient_id, recipient_role = await self.save_message(sender_id, sender_role, content)
+                print(f"Message saved: ID {saved_message.id}")
 
                 # Send message to room group
                 await self.channel_layer.group_send(
@@ -60,7 +70,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     {
                         'type': 'chat.message',
                         'message': content,
-                        'sender_id': sender_id,
+                        'sender_id': int(sender_id),
                         'sender_role': sender_role,
                         'created_at': saved_message.created_at.isoformat(),
                         'id': saved_message.id,

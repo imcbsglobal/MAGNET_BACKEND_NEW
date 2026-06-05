@@ -85,7 +85,16 @@ def _delete_from_r2(key):
         pass
 
 
-def _serialize_id_card(student, form=None):
+def _serialize_id_card(student, form=None, request_institution_id=None):
+    # Ensure form exists if student has submitted data but form was not passed
+    if not form:
+        # Try finding by student's ID
+        form = IDCardForm.objects.filter(institution_id=student.institution_id, admno=student.admno).first()
+        
+        # If not found and we have a request institution ID that differs, try that too
+        if not form and request_institution_id and request_institution_id != student.institution_id:
+            form = IDCardForm.objects.filter(institution_id=request_institution_id, admno=student.admno).first()
+
     return {
         'institution_id': student.institution_id,
         'admno': student.admno,
@@ -126,49 +135,43 @@ def _serialize_id_card(student, form=None):
 @permission_classes([AllowAny])
 def id_card_student_list(request):
     print(f"🔍 ID Card API called with params: {request.GET}")
-    print(f"👤 User: {request.user}")
-    print(f"🔑 Headers: {dict(request.headers)}")
     
     institution_id = request.GET.get('institution_id')
     student_class = request.GET.get('student_class')
     div = request.GET.get('div')
     admin_mode = request.GET.get('admin_mode', 'false').lower() == 'true'
 
-    print(f"📊 Parameters: institution_id={institution_id}, admin_mode={admin_mode}")
-
     if not institution_id:
-        print("❌ No institution_id provided")
         return JsonResponse({'message': 'institution_id required'}, status=400)
 
-    print(f"📋 Loading students for institution: {institution_id}")
-    
+    # Fetch students for this institution
     students = StudentData.objects.filter(institution_id=institution_id)
     
-    # If not admin mode, filter by class and division as before
+    # If not admin mode, filter by class and division
     if not admin_mode:
         if student_class:
             students = students.filter(student_class=student_class)
         if div:
             students = students.filter(div=div)
 
-    print(f"👥 Found {students.count()} students after filtering")
-
-    forms = { (form.institution_id, form.admno): form for form in IDCardForm.objects.filter(institution_id=institution_id) }
-    print(f"📝 Found {len(forms)} ID card forms")
+    # Fetch all forms for this institution to optimize lookup
+    forms_list = IDCardForm.objects.filter(institution_id=institution_id)
+    forms_dict = { form.admno: form for form in forms_list }
     
-    if admin_mode:
-        # Admin mode: only return students who have submitted ID card forms
-        data = []
-        for student in students.order_by('student_class', 'div', 'student_name'):
-            form = forms.get((student.institution_id, student.admno))
-            if form and form.status == IDCardForm.STATUS_USED:  # Only submitted forms
-                data.append(_serialize_id_card(student, form))
-        print(f"✅ Admin mode: returning {len(data)} submitted forms")
-    else:
-        # Teacher mode: return all students (submitted and not submitted)
-        data = [_serialize_id_card(student, forms.get((student.institution_id, student.admno))) for student in students.order_by('student_class', 'div', 'student_name')]
-        print(f"✅ Teacher mode: returning {len(data)} students")
-    
+    data = []
+    for student in students.order_by('student_class', 'div', 'student_name'):
+        # Try matching by admno from our pre-fetched forms
+        form = forms_dict.get(student.admno)
+        
+        if admin_mode:
+            # In admin mode, only show those who submitted
+            if form and form.status == IDCardForm.STATUS_USED:
+                data.append(_serialize_id_card(student, form, institution_id))
+        else:
+            # In teacher mode, show all students
+            data.append(_serialize_id_card(student, form, institution_id))
+            
+    print(f"✅ Returning {len(data)} students (Admin: {admin_mode})")
     return JsonResponse(data, safe=False)
 
 

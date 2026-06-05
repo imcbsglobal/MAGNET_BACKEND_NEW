@@ -8,6 +8,7 @@ import os
 import boto3
 from django.conf import settings
 from botocore.exceptions import NoCredentialsError
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 @csrf_exempt
 def get_assigned_contacts(request):
@@ -15,9 +16,30 @@ def get_assigned_contacts(request):
     Returns contacts for the chat.
     Optimized to NOT create rooms proactively.
     """
-    role = request.GET.get('role')
-    user_id = request.GET.get('user_id')
-    institution_id = request.GET.get('institution_id')
+    # Try to extract details from JWT token
+    role = None
+    user_id = None
+    institution_id = None
+
+    try:
+        auth = JWTAuthentication()
+        header = auth.get_header(request)
+        if header:
+            raw_token = auth.get_raw_token(header)
+            validated_token = auth.get_validated_token(raw_token)
+            role = validated_token.get('role')
+            user_id = validated_token.get('user_id')
+            institution_id = validated_token.get('institution_id')
+    except Exception as e:
+        print(f"JWT extraction failed: {str(e)}")
+
+    # Fallback to query params if not in JWT or if JWT extraction failed
+    if not role:
+        role = request.GET.get('role')
+    if not user_id:
+        user_id = request.GET.get('user_id')
+    if not institution_id:
+        institution_id = request.GET.get('institution_id')
     
     def clean_val(val):
         if val in [None, '', 'null', 'undefined']:
@@ -140,7 +162,24 @@ def get_or_create_room(request):
             data = json.loads(request.body)
             teacher_id = data.get('teacher_id')
             student_id = data.get('student_id')
+
+            # Try to get teacher_id from JWT if not provided or for security
+            try:
+                auth = JWTAuthentication()
+                header = auth.get_header(request)
+                if header:
+                    raw_token = auth.get_raw_token(header)
+                    validated_token = auth.get_validated_token(raw_token)
+                    if validated_token.get('role') == 'teacher':
+                        teacher_id = validated_token.get('user_id')
+                    elif validated_token.get('role') in ['parent', 'student']:
+                        student_id = validated_token.get('user_id')
+            except Exception:
+                pass
             
+            if not teacher_id or not student_id:
+                return JsonResponse({'status': False, 'message': 'Both teacher_id and student_id are required'}, status=400)
+
             room, _ = ChatRoom.objects.get_or_create(
                 teacher_id=teacher_id,
                 student_id=student_id
@@ -156,8 +195,22 @@ def get_chat_history(request, room_id):
         room = ChatRoom.objects.get(id=room_id)
         messages = room.messages.all().order_by('created_at')
         
+        # Try to get role from JWT
+        role = None
+        try:
+            auth = JWTAuthentication()
+            header = auth.get_header(request)
+            if header:
+                raw_token = auth.get_raw_token(header)
+                validated_token = auth.get_validated_token(raw_token)
+                role = validated_token.get('role')
+        except Exception:
+            pass
+
         # Mark messages as read for the recipient
-        role = request.GET.get('role')
+        if not role:
+            role = request.GET.get('role')
+            
         if role == 'teacher':
             room.messages.filter(sender_role='student', is_read=False).update(is_read=True)
         else:
@@ -249,6 +302,18 @@ def upload_chat_file(request):
         sender_id = request.POST.get('sender_id')
         sender_role = request.POST.get('sender_role')
         file = request.FILES.get('file')
+
+        # Try to get sender info from JWT
+        try:
+            auth = JWTAuthentication()
+            header = auth.get_header(request)
+            if header:
+                raw_token = auth.get_raw_token(header)
+                validated_token = auth.get_validated_token(raw_token)
+                sender_role = validated_token.get('role')
+                sender_id = validated_token.get('user_id')
+        except Exception:
+            pass
 
         if not all([room_id, sender_id, sender_role, file]):
             return JsonResponse({'status': False, 'message': 'Missing data'}, status=400)
@@ -358,6 +423,18 @@ def send_bulk_message(request):
             student_ids = data.get('student_ids', [])
             teacher_id = data.get('teacher_id')
             content = data.get('content', '')
+
+            # Try to get teacher_id from JWT
+            try:
+                auth = JWTAuthentication()
+                header = auth.get_header(request)
+                if header:
+                    raw_token = auth.get_raw_token(header)
+                    validated_token = auth.get_validated_token(raw_token)
+                    if validated_token.get('role') == 'teacher':
+                        teacher_id = validated_token.get('user_id')
+            except Exception:
+                pass
 
             if not all([student_ids, teacher_id, content]):
                 return JsonResponse({'status': False, 'message': 'Missing data'}, status=400)

@@ -7,14 +7,14 @@ class StudentData(models.Model):
     student_class = models.CharField(max_length=100)
     div = models.CharField(max_length=50)
     password = models.CharField(max_length=100)
-    mobile = models.CharField(max_length=20)
-    fathername = models.CharField(max_length=200)
-    mothername = models.CharField(max_length=200)
+    mobile = models.CharField(max_length=20, blank=True, null=True)
+    fathername = models.CharField(max_length=200, blank=True, null=True)
+    mothername = models.CharField(max_length=200, blank=True, null=True)
     imageurl = models.TextField(blank=True, null=True)
-    address = models.TextField()
-    place = models.CharField(max_length=200)
+    address = models.TextField(blank=True, null=True)
+    place = models.CharField(max_length=200, blank=True, null=True)
     remark = models.TextField(blank=True, null=True)
-    refno = models.CharField(max_length=100)
+    refno = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.student_name

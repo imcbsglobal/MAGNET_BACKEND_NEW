@@ -9,10 +9,20 @@ from .models import StudentData
 def add_student(request):
     if request.method == 'POST':
         data = json.loads(request.body)
+        required_fields = ['institution_id', 'admno', 'student_name', 'student_class', 'div', 'password']
 
         if isinstance(data, list):
             if not data:
                 return JsonResponse({'status': False, 'message': 'Empty data list'}, status=400)
+
+            # Validate all items in the list first
+            for i, item in enumerate(data):
+                missing = [f for f in required_fields if not item.get(f)]
+                if missing:
+                    return JsonResponse({
+                        'status': False, 
+                        'message': f'Row {i+1} is missing required fields: {", ".join(missing)}'
+                    }, status=400)
 
             institution_ids = set(item.get('institution_id') for item in data if item.get('institution_id'))
             if institution_ids:
@@ -39,6 +49,14 @@ def add_student(request):
             StudentData.objects.bulk_create(students)
             return JsonResponse({'status': True, 'message': f'{len(students)} students updated successfully'})
         else:
+            # Validate single item
+            missing = [f for f in required_fields if not data.get(f)]
+            if missing:
+                return JsonResponse({
+                    'status': False, 
+                    'message': f'Missing required fields: {", ".join(missing)}'
+                }, status=400)
+
             institution_id = data.get('institution_id')
             if institution_id:
                 StudentData.objects.filter(institution_id=institution_id).delete()

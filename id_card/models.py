@@ -20,10 +20,9 @@ class IDCardForm(models.Model):
 
     # Parent-entered ID card details
     student_name = models.CharField(max_length=200, blank=True)
+    house_name = models.CharField(max_length=200, blank=True)
     place = models.CharField(max_length=200, blank=True)
-    district = models.CharField(max_length=200, blank=True)
     city = models.CharField(max_length=200, blank=True)
-    state = models.CharField(max_length=200, blank=True)
     pin = models.CharField(max_length=20, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)

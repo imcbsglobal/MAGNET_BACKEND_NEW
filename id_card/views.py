@@ -105,10 +105,9 @@ def _serialize_id_card(student, form=None):
         'photo_url': form.photo_url if form else None,
         'details': {
             'student_name': form.student_name if form else '',
+            'house_name': form.house_name if form else '',
             'place': form.place if form else '',
-            'district': form.district if form else '',
             'city': form.city if form else '',
-            'state': form.state if form else '',
             'pin': form.pin if form else '',
             'phone': form.phone if form else '',
             'email': form.email if form else '',
@@ -193,10 +192,9 @@ def parent_link_info(request):
         'institution_id': form.institution_id,
         'admno': form.admno,
         'student_name': form.student_name,
+        'house_name': form.house_name,
         'place': form.place,
-        'district': form.district,
         'city': form.city,
-        'state': form.state,
         'pin': form.pin,
         'phone': form.phone,
         'email': form.email,
@@ -223,25 +221,27 @@ def submit_id_card_form(request):
     if form.status != IDCardForm.STATUS_PENDING:
         return JsonResponse({'message': 'This link has already been used'}, status=410)
 
-    required_fields = ['student_name', 'place', 'district', 'city', 'state', 'pin', 'phone', 'email', 'father_name', 'mother_name', 'dob']
+    required_fields = ['student_name', 'phone', 'house_name', 'place', 'city', 'pin']
     missing = [field for field in required_fields if not data.get(field)]
     if missing:
         return JsonResponse({'message': f'Missing fields: {", ".join(missing)}'}, status=400)
 
     form.student_name = data.get('student_name')
-    form.place = data.get('place')
-    form.district = data.get('district')
-    form.city = data.get('city')
-    form.state = data.get('state')
-    form.pin = data.get('pin')
-    form.phone = data.get('phone')
-    form.email = data.get('email')
-    form.father_name = data.get('father_name')
-    form.mother_name = data.get('mother_name')
-    try:
-        form.dob = datetime.fromisoformat(data.get('dob')).date()
-    except ValueError:
-        return JsonResponse({'message': 'Invalid date of birth format. Use YYYY-MM-DD.'}, status=400)
+    form.house_name   = data.get('house_name')
+    form.place        = data.get('place')
+    form.city         = data.get('city')
+    form.pin          = data.get('pin')
+    form.phone        = data.get('phone')
+    form.email        = data.get('email', '')
+    form.father_name  = data.get('father_name', '')
+    form.mother_name  = data.get('mother_name', '')
+    
+    dob_val = data.get('dob')
+    if dob_val:
+        try:
+            form.dob = datetime.fromisoformat(dob_val).date()
+        except ValueError:
+            return JsonResponse({'message': 'Invalid date of birth format. Use YYYY-MM-DD.'}, status=400)
 
     form.status = IDCardForm.STATUS_USED
     form.used_at = now()
@@ -294,22 +294,25 @@ def lookup_by_phone(request):
             'institution_id': student.institution_id,
             'admno': student.admno,
             'student_name': student.student_name,
+            'father_name': student.fathername,
+            'mother_name': student.mothername,
+            'mobile': student.mobile,
+            'place': student.place,
             'student_class': student.student_class,
             'div': student.div,
             'already_submitted': already_submitted,
             'form_id': form.id if form else None,
             'existing': {
                 'student_name': form.student_name if form else '',
+                'house_name':   form.house_name   if form else '',
+                'place':        form.place        if form else '',
+                'city':         form.city         if form else '',
+                'pin':          form.pin          if form else '',
+                'phone':        form.phone        if form else '',
+                'email':        form.email        if form else '',
                 'father_name':  form.father_name  if form else '',
                 'mother_name':  form.mother_name  if form else '',
                 'dob':          form.dob.isoformat() if form and form.dob else '',
-                'phone':        form.phone        if form else '',
-                'email':        form.email        if form else '',
-                'place':        form.place        if form else '',
-                'district':     form.district     if form else '',
-                'city':         form.city         if form else '',
-                'state':        form.state        if form else '',
-                'pin':          form.pin          if form else '',
             } if form else None,
         })
 
@@ -328,8 +331,7 @@ def submit_id_card_form_by_phone(request):
     if not institution_id or not admno:
         return JsonResponse({'message': 'institution_id and admno are required.'}, status=400)
 
-    required_fields = ['student_name', 'father_name', 'mother_name', 'dob', 'phone',
-                       'email', 'place', 'district', 'city', 'state', 'pin']
+    required_fields = ['student_name', 'phone', 'house_name', 'place', 'city', 'pin']
     missing = [f for f in required_fields if not data.get(f)]
     if missing:
         return JsonResponse({'message': f'Missing fields: {", ".join(missing)}'}, status=400)
@@ -341,19 +343,21 @@ def submit_id_card_form_by_phone(request):
     )
 
     form.student_name = data.get('student_name')
-    form.father_name  = data.get('father_name')
-    form.mother_name  = data.get('mother_name')
-    form.phone        = data.get('phone')
-    form.email        = data.get('email')
+    form.house_name   = data.get('house_name')
     form.place        = data.get('place')
-    form.district     = data.get('district')
     form.city         = data.get('city')
-    form.state        = data.get('state')
     form.pin          = data.get('pin')
-    try:
-        form.dob = datetime.fromisoformat(data.get('dob')).date()
-    except (ValueError, TypeError):
-        return JsonResponse({'message': 'Invalid date of birth format. Use YYYY-MM-DD.'}, status=400)
+    form.phone        = data.get('phone')
+    form.email        = data.get('email', '')
+    form.father_name  = data.get('father_name', '')
+    form.mother_name  = data.get('mother_name', '')
+    
+    dob_val = data.get('dob')
+    if dob_val:
+        try:
+            form.dob = datetime.fromisoformat(dob_val).date()
+        except (ValueError, TypeError):
+            return JsonResponse({'message': 'Invalid date of birth format. Use YYYY-MM-DD.'}, status=400)
 
     form.status  = IDCardForm.STATUS_USED
     form.used_at = now()
@@ -443,10 +447,9 @@ def id_card_submission_detail(request):
             'status': form.status,
             'token': form.token,
             'student_name': form.student_name,
+            'house_name': form.house_name,
             'place': form.place,
-            'district': form.district,
             'city': form.city,
-            'state': form.state,
             'pin': form.pin,
             'phone': form.phone,
             'email': form.email,
@@ -468,25 +471,27 @@ def update_id_card_submission(request, pk):
     except IDCardForm.DoesNotExist:
         return JsonResponse({'message': 'Submission not found'}, status=404)
 
-    required_fields = ['student_name', 'place', 'district', 'city', 'state', 'pin', 'phone', 'email', 'father_name', 'mother_name', 'dob']
+    required_fields = ['student_name', 'phone', 'house_name', 'place', 'city', 'pin']
     missing = [field for field in required_fields if not data.get(field)]
     if missing:
         return JsonResponse({'message': f'Missing fields: {", ".join(missing)}'}, status=400)
 
     form.student_name = data.get('student_name')
-    form.place = data.get('place')
-    form.district = data.get('district')
-    form.city = data.get('city')
-    form.state = data.get('state')
-    form.pin = data.get('pin')
-    form.phone = data.get('phone')
-    form.email = data.get('email')
-    form.father_name = data.get('father_name')
-    form.mother_name = data.get('mother_name')
-    try:
-        form.dob = datetime.fromisoformat(data.get('dob')).date()
-    except ValueError:
-        return JsonResponse({'message': 'Invalid date of birth format. Use YYYY-MM-DD.'}, status=400)
+    form.house_name   = data.get('house_name')
+    form.place        = data.get('place')
+    form.city         = data.get('city')
+    form.pin          = data.get('pin')
+    form.phone        = data.get('phone')
+    form.email        = data.get('email', '')
+    form.father_name  = data.get('father_name', '')
+    form.mother_name  = data.get('mother_name', '')
+    
+    dob_val = data.get('dob')
+    if dob_val:
+        try:
+            form.dob = datetime.fromisoformat(dob_val).date()
+        except ValueError:
+            return JsonResponse({'message': 'Invalid date of birth format. Use YYYY-MM-DD.'}, status=400)
 
     form.save()
     return JsonResponse({'status': True, 'message': 'Submission updated successfully'})
@@ -535,10 +540,9 @@ def generate_id_card_pdf(request):
                 form = IDCardForm.objects.get(institution_id=institution_id, admno=admno)
                 details = {
                     'student_name': form.student_name,
+                    'house_name': form.house_name,
                     'place': form.place,
-                    'district': form.district,
                     'city': form.city,
-                    'state': form.state,
                     'pin': form.pin,
                     'phone': form.phone,
                     'email': form.email,
@@ -555,10 +559,9 @@ def generate_id_card_pdf(request):
 
         # Build address
         full_address = ', '.join(filter(None, [
+            details.get('house_name'),
             details.get('place'),
-            details.get('district'),
             details.get('city'),
-            details.get('state'),
             details.get('pin'),
         ]))
 
@@ -700,10 +703,9 @@ def generate_bulk_id_card_pdf(request):
                     form = IDCardForm.objects.get(institution_id=current_inst_id, admno=current_admno)
                     details = {
                         'student_name': form.student_name,
+                        'house_name': form.house_name,
                         'place': form.place,
-                        'district': form.district,
                         'city': form.city,
-                        'state': form.state,
                         'pin': form.pin,
                         'phone': form.phone,
                         'email': form.email,
@@ -719,10 +721,9 @@ def generate_bulk_id_card_pdf(request):
 
             # Build address
             full_address = ', '.join(filter(None, [
+                details.get('house_name'),
                 details.get('place'),
-                details.get('district'),
                 details.get('city'),
-                details.get('state'),
                 details.get('pin'),
             ]))
 

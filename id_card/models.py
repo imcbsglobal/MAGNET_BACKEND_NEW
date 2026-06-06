@@ -21,6 +21,7 @@ class IDCardForm(models.Model):
     # Parent-entered ID card details
     student_name = models.CharField(max_length=200, blank=True)
     house_name = models.CharField(max_length=200, blank=True)
+    house_group = models.CharField(max_length=100, blank=True)
     place = models.CharField(max_length=200, blank=True)
     city = models.CharField(max_length=200, blank=True)
     pin = models.CharField(max_length=20, blank=True)
@@ -47,3 +48,14 @@ class IDCardForm(models.Model):
     @staticmethod
     def generate_token():
         return uuid.uuid4().hex
+
+
+class HouseGroup(models.Model):
+    institution_id = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ('institution_id', 'name')
+
+    def __str__(self):
+        return f"{self.name} ({self.institution_id})"

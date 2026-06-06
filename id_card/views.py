@@ -19,7 +19,54 @@ from weasyprint import HTML as WeasyHTML
 
 from student_data.models import StudentData
 from add_administrators.models import SchoolInfo
-from .models import IDCardForm
+from .models import IDCardForm, HouseGroup
+
+
+# ── House Group Master ────────────────────────────────────────────────────────
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def list_house_groups(request, institution_id):
+    """List all house groups for an institution."""
+    groups = HouseGroup.objects.filter(institution_id=institution_id).order_by('name')
+    data = [{'id': g.id, 'name': g.name} for g in groups]
+    return JsonResponse(data, safe=False)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def add_house_group(request):
+    """Add or update a house group."""
+    institution_id = request.data.get('institution_id')
+    name = request.data.get('name', '').strip()
+    group_id = request.data.get('id')
+
+    if not institution_id or not name:
+        return JsonResponse({'message': 'Institution ID and name are required.'}, status=400)
+
+    try:
+        if group_id:
+            group = HouseGroup.objects.get(id=group_id, institution_id=institution_id)
+            group.name = name
+            group.save()
+        else:
+            HouseGroup.objects.create(institution_id=institution_id, name=name)
+        return JsonResponse({'message': 'House group saved successfully.'})
+    except Exception as e:
+        return JsonResponse({'message': str(e)}, status=400)
+
+
+@api_view(['DELETE'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def delete_house_group(request, group_id):
+    """Delete a house group."""
+    try:
+        HouseGroup.objects.filter(id=group_id).delete()
+        return JsonResponse({'message': 'House group deleted successfully.'})
+    except Exception as e:
+        return JsonResponse({'message': str(e)}, status=400)
 
 
 # ── Cloudflare R2 helpers ─────────────────────────────────────────────────────
@@ -115,6 +162,7 @@ def _serialize_id_card(student, form=None, request_institution_id=None):
         'details': {
             'student_name': form.student_name if form else '',
             'house_name': form.house_name if form else '',
+            'house_group': form.house_group if form else '',
             'place': form.place if form else '',
             'city': form.city if form else '',
             'pin': form.pin if form else '',
@@ -196,6 +244,7 @@ def parent_link_info(request):
         'admno': form.admno,
         'student_name': form.student_name,
         'house_name': form.house_name,
+        'house_group': form.house_group,
         'place': form.place,
         'city': form.city,
         'pin': form.pin,
@@ -231,6 +280,7 @@ def submit_id_card_form(request):
 
     form.student_name = data.get('student_name')
     form.house_name   = data.get('house_name')
+    form.house_group  = data.get('house_group', '')
     form.place        = data.get('place')
     form.city         = data.get('city')
     form.pin          = data.get('pin')
@@ -308,6 +358,7 @@ def lookup_by_phone(request):
             'existing': {
                 'student_name': form.student_name if form else '',
                 'house_name':   form.house_name   if form else '',
+                'house_group':  form.house_group  if form else '',
                 'place':        form.place        if form else '',
                 'city':         form.city         if form else '',
                 'pin':          form.pin          if form else '',
@@ -347,6 +398,7 @@ def submit_id_card_form_by_phone(request):
 
     form.student_name = data.get('student_name')
     form.house_name   = data.get('house_name')
+    form.house_group  = data.get('house_group', '')
     form.place        = data.get('place')
     form.city         = data.get('city')
     form.pin          = data.get('pin')
@@ -451,6 +503,7 @@ def id_card_submission_detail(request):
             'token': form.token,
             'student_name': form.student_name,
             'house_name': form.house_name,
+            'house_group': form.house_group,
             'place': form.place,
             'city': form.city,
             'pin': form.pin,
@@ -481,6 +534,7 @@ def update_id_card_submission(request, pk):
 
     form.student_name = data.get('student_name')
     form.house_name   = data.get('house_name')
+    form.house_group  = data.get('house_group', '')
     form.place        = data.get('place')
     form.city         = data.get('city')
     form.pin          = data.get('pin')

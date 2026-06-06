@@ -17,4 +17,8 @@ urlpatterns = [
     # Form status management
     path('form-status/', views.id_card_form_status, name='id_card_form_status'),
     path('toggle-form/', views.toggle_id_card_form, name='toggle_id_card_form'),
+    # House Groups Master
+    path('house-groups/<str:institution_id>/', views.list_house_groups, name='list_house_groups'),
+    path('house-groups-add/', views.add_house_group, name='add_house_group'),
+    path('house-groups-delete/<int:group_id>/', views.delete_house_group, name='delete_house_group'),
 ]

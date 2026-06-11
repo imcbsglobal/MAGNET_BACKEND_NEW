@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'calendar_setup',
     'id_card',
     'chat',
+    'evaluation_system',
 ]
 
 ASGI_APPLICATION = 'magnetapp_backend.asgi.application'

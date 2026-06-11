@@ -101,6 +101,7 @@ def teacher_login(request):
                     'institution_id': teacher.institution_id,
                     'assigned_class': teacher.assigned_class or '',
                     'assigned_division': teacher.assigned_division or '',
+                    'job_category': teacher.job_category or '',
                     'access': str(refresh.access_token),
                     'refresh': str(refresh)
                 })

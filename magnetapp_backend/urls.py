@@ -19,4 +19,5 @@ urlpatterns = [
     path('id-card/', include('id_card.urls')),
     path('api/', include('add_administrators.urls')),
     path('api/', include('logins.urls')),
+    path('api/evaluation/', include('evaluation_system.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

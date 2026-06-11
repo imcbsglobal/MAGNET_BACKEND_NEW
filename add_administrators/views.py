@@ -204,7 +204,7 @@ def school_info_save(request):
                 'pincode': pincode,
                 'phone': phone,
                 'email': email,
-            }
+            }   
         )
     except MultipleObjectsReturned:
         infos = SchoolInfo.objects.filter(institution_id=institution_id).order_by('-updated_at')

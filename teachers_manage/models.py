@@ -17,6 +17,7 @@ class Teacher(models.Model):
     nationality = models.CharField(max_length=100, null=True, blank=True)
     assigned_class = models.CharField(max_length=100, null=True, blank=True)
     assigned_division = models.CharField(max_length=50, null=True, blank=True)
+    additional_class_assignments = models.JSONField(default=list, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

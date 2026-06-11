@@ -18,6 +18,7 @@ def teacher_to_dict(t):
         'nationality': t.nationality,
         'assigned_class': t.assigned_class,
         'assigned_division': t.assigned_division,
+        'additional_class_assignments': t.additional_class_assignments,
         'created_at': t.created_at,
     }
 
@@ -50,6 +51,7 @@ def teacher_list_create(request):
                 nationality=data.get('nationality'),
                 assigned_class=data.get('assigned_class'),
                 assigned_division=data.get('assigned_division'),
+                additional_class_assignments=data.get('additional_class_assignments', []),
             )
             return JsonResponse(teacher_to_dict(teacher), status=201)
         except Exception as e:
@@ -78,6 +80,7 @@ def teacher_detail(request, pk):
             teacher.nationality = data.get('nationality', teacher.nationality)
             teacher.assigned_class = data.get('assigned_class', teacher.assigned_class)
             teacher.assigned_division = data.get('assigned_division', teacher.assigned_division)
+            teacher.additional_class_assignments = data.get('additional_class_assignments', teacher.additional_class_assignments)
             teacher.save()
             return JsonResponse(teacher_to_dict(teacher))
         except Exception as e:
